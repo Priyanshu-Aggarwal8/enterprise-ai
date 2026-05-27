@@ -1,11 +1,22 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from database import engine, Base
+import models
+from routers import organizations # IMPORT THE ROUTER
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield
 
 app = FastAPI(
     title="Enterprise Multi-AI Agent Platform",
-    description="API Gateway for Agent Orchestration",
-    version="1.0.0"
+    lifespan=lifespan
 )
+
+app.include_router(organizations.router)
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok", "message": "API Gateway is running safely."}
+    return {"status": "ok", "message": "API Gateway and Database connected."}
