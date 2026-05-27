@@ -19,3 +19,11 @@ Thumbs.db
 # Environment Variables
 .env
 .env.local
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
