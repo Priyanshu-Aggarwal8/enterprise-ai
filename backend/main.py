@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from database import engine, Base
 import models
-from routers import organizations # IMPORT THE ROUTER
+from routers import organizations, agents # IMPORT THE ROUTER
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -16,6 +16,7 @@ app = FastAPI(
 )
 
 app.include_router(organizations.router)
+app.include_router(agents.router)
 
 @app.get("/health")
 async def health_check():
