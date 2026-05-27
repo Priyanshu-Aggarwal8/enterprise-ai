@@ -12,3 +12,14 @@ class OrganizationResponse(BaseModel):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+class SecretCreate(BaseModel):
+    provider: str
+    raw_api_key: str
+
+class SecretResponse(BaseModel):
+    id: UUID
+    provider: str
+    key_preview: str
+    
+    model_config = ConfigDict(from_attributes=True)
