@@ -1,11 +1,8 @@
-import asyncio
 from celery import Celery, current_task
-from sqlalchemy.future import select
 from config import settings
-from database import AsyncSessionLocal
-import models
 import security
 import agent_core
+import psycopg
 
 celery_app = Celery(
     "agent_worker",
@@ -13,27 +10,32 @@ celery_app = Celery(
     backend=settings.redis_url
 )
 
-async def fetch_and_decrypt_key(org_id: str) -> str:
-    async with AsyncSessionLocal() as db:
-        stmt = select(models.OrganizationSecret).where(
-            models.OrganizationSecret.org_id == org_id
-        )
-        result = await db.execute(stmt)
-        secret_record = result.scalar_one_or_none()
-        
-        if not secret_record:
-            raise ValueError("No API key configured for this Organization. Please add one in Settings.")
+sync_db_url = settings.database_url.replace("+asyncpg", "")
+
+def fetch_and_decrypt_key_sync(org_id: str) -> str:
+    """Fetches the API key from PostgreSQL synchronously to avoid Event Loop collisions."""
+    with psycopg.connect(sync_db_url) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT encrypted_key FROM organization_secrets WHERE org_id = %s", 
+                (org_id,)
+            )
+            result = cur.fetchone()
             
-        return security.decrypt_key(secret_record.encrypted_key)
+            if not result:
+                raise ValueError("No API key configured for this Organization. Please add one in Settings.")
+                
+            return security.decrypt_key(result[0])
 
 @celery_app.task(name="execute_agent")
-def execute_agent_task(org_id: str, agent_id: str, prompt: str):
+def execute_agent_task(org_id: str, agent_id: str, session_id: str, prompt: str):
     task_id = current_task.request.id
-    print(f"WORKER: Starting AI execution for Task {task_id} (Org: {org_id})")
+    print(f"WORKER: Starting AI execution for Task {task_id} (Org: {org_id}, Session: {session_id})")
     
     try:
-        decrypted_api_key = asyncio.run(fetch_and_decrypt_key(org_id))
-        final_answer = agent_core.run_agent_workflow(prompt, task_id, decrypted_api_key)
+        decrypted_api_key = fetch_and_decrypt_key_sync(org_id)
+        
+        final_answer = agent_core.run_agent_workflow(prompt, task_id, decrypted_api_key, session_id, org_id)
         
         print(f"WORKER: Execution successful!")
         return {"status": "completed", "agent_id": agent_id, "result": final_answer}

@@ -1,0 +1,26 @@
+<div class="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
+  <header class="bg-slate-900 text-white shadow-md border-b border-slate-700 z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <div class="flex items-center gap-8">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 bg-sky-500 rounded flex items-center justify-center font-bold text-lg">AI</div>
+          <h1 class="text-xl font-semibold tracking-tight">Enterprise Multi-Agent</h1>
+        </div>
+        
+        <nav class="hidden md:flex gap-4">
+          <a routerLink="/" routerLinkActive="bg-slate-800 text-white" [routerLinkActiveOptions]="{exact: true}" class="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-700 hover:text-white transition-colors cursor-pointer">Workspace</a>
+          <a routerLink="/settings" routerLinkActive="bg-slate-800 text-white" class="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-700 hover:text-white transition-colors cursor-pointer">Organization Settings</a>
+        </nav>
+      </div>
+
+      <div class="text-sm font-medium text-slate-400">
+        Status: <span class="text-emerald-400 flex-inline items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> Secure Connection</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 flex overflow-hidden">
+    <router-outlet></router-outlet>
+  </main>
+</div>

@@ -13,11 +13,12 @@ router = APIRouter(
 class AgentRunRequest(BaseModel):
     org_id: str
     agent_id: str
+    session_id: str
     prompt: str
 
 @router.post("/run")
 async def run_agent(request: AgentRunRequest):
-    task = worker.execute_agent_task.delay(request.org_id, request.agent_id, request.prompt)
+    task = worker.execute_agent_task.delay(request.org_id, request.agent_id, request.session_id, request.prompt)
     
     return {
         "message": "Agent execution queued successfully",

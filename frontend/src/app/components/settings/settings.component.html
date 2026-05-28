@@ -1,0 +1,80 @@
+<div class="flex-1 overflow-y-auto p-8 bg-slate-50 w-full max-w-5xl mx-auto">
+  <h2 class="text-3xl font-bold text-slate-900 mb-8">Organization Settings</h2>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-8 h-8 rounded bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">1</div>
+        <h3 class="text-lg font-semibold text-slate-800">Create Workspace</h3>
+      </div>
+      <p class="text-sm text-slate-500 mb-6">Create an isolated organization tenant. Data and execution environments are completely separated per organization.</p>
+      
+      <div class="flex flex-col gap-3">
+        <label class="text-sm font-medium text-slate-700">Organization Name</label>
+        <div class="flex gap-3">
+          <input type="text" [(ngModel)]="newOrgName" placeholder="e.g., Wayne Enterprises" 
+                 class="flex-1 p-2 border border-slate-300 rounded focus:ring-2 focus:ring-sky-500 outline-none text-sm">
+          <button (click)="createOrganization()" [disabled]="!newOrgName.trim() || isCreatingOrg"
+                  class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700 disabled:opacity-50 transition-colors">
+            Create
+          </button>
+        </div>
+      </div>
+
+      <div class="mt-8">
+        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Existing Organizations</h4>
+        <div class="flex flex-col gap-2 max-h-40 overflow-y-auto">
+          <div *ngFor="let org of organizations" class="p-3 bg-slate-50 border border-slate-200 rounded flex justify-between items-center text-sm">
+            <span class="font-medium text-slate-700">{{ org.name }}</span>
+            <span class="font-mono text-xs text-slate-400">{{ org.id }}</span>
+          </div>
+          <p *ngIf="organizations.length === 0" class="text-sm text-slate-500 italic">No organizations found.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-8 h-8 rounded bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">2</div>
+        <h3 class="text-lg font-semibold text-slate-800">Inject API Key (BYOK)</h3>
+      </div>
+      <p class="text-sm text-slate-500 mb-6">Securely store your LLM provider keys. Keys are immediately encrypted via AES-256 and are never stored in plaintext.</p>
+
+      <div class="flex flex-col gap-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Select Organization</label>
+          <select [(ngModel)]="selectedOrgId" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-sky-500 outline-none text-sm bg-white">
+            <option value="" disabled>Select an org...</option>
+            <option *ngFor="let org of organizations" [value]="org.id">{{ org.name }}</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">AI Provider</label>
+          <select [(ngModel)]="provider" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-sky-500 outline-none text-sm bg-slate-50 cursor-not-allowed" disabled>
+            <option value="google">Google Gemini</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Raw API Key</label>
+          <input type="password" [(ngModel)]="rawApiKey" placeholder="AIzaSy..." 
+                 class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-mono">
+        </div>
+
+        <button (click)="addApiKey()" [disabled]="!selectedOrgId || !rawApiKey.trim() || isAddingKey"
+                class="w-full mt-2 px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded hover:bg-emerald-700 disabled:opacity-50 transition-colors flex justify-center items-center gap-2">
+          <svg *ngIf="!isAddingKey" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+          Encrypt & Save Key
+        </button>
+
+        <div *ngIf="keySuccessMessage" class="mt-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm rounded flex items-start gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+          <span>{{ keySuccessMessage }}</span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
