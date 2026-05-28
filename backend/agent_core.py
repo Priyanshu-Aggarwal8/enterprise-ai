@@ -17,8 +17,8 @@ def calculate_multiply(a: int, b: int) -> int:
     """Useful for multiplying two numbers together. Always use this for multiplication."""
     return a * b
 
-def run_agent_workflow(prompt: str, task_id: str):
-    llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0)
+def run_agent_workflow(prompt: str, task_id: str, api_key: str):
+    llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0, api_key=api_key)
     tools = [calculate_multiply]
     agent_executor = create_react_agent(llm, tools)
     
