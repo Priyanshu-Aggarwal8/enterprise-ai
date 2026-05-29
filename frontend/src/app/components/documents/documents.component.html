@@ -1,0 +1,35 @@
+<div class="p-8">
+  <h2 class="text-2xl font-bold mb-4">Organization Documents</h2>
+  <p class="text-sm muted mb-6">View and manage documents ingested into this organization's workspace.</p>
+
+  <div *ngIf="loading" class="text-sm muted">Loading...</div>
+
+  <div *ngIf="documents.length === 0 && !loading" class="text-sm muted">No documents uploaded yet.</div>
+
+  <div class="space-y-4">
+    <div *ngFor="let d of documents" class="p-4 border rounded bg-slate-50 flex items-center justify-between">
+      <div>
+        <div class="font-semibold">{{ d.filename }}</div>
+        <div class="text-xs muted">Chunks: {{ d.chunks }} • Uploaded: {{ d.latest_created_at }}</div>
+      </div>
+      <div class="flex items-center gap-2">
+        <label class="px-3 py-1 bg-sky-600 text-white rounded cursor-pointer text-sm">
+          Replace
+          <input type="file" accept="application/pdf" (change)="onFileSelected($event)" class="hidden" />
+        </label>
+        <button (click)="confirmDelete(d.filename)" class="px-3 py-1 bg-red-600 text-white rounded text-sm">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="deletingFilename" class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+    <div class="flex items-center justify-between">
+      <div class="text-sm text-red-700">Delete {{ deletingFilename }}?</div>
+      <div class="flex items-center gap-2">
+        <button (click)="doDelete()" class="px-3 py-1 bg-red-600 text-white rounded">Yes, delete</button>
+        <button (click)="cancelDelete()" class="px-3 py-1 bg-slate-200 rounded">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+</div>

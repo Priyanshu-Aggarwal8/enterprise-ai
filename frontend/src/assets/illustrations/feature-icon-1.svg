@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" class="icon-tone">
+  <defs>
+    <linearGradient id="fi1" x1="0" x2="1">
+      <stop offset="0" stop-color="var(--accent)" stop-opacity="1" />
+      <stop offset="1" stop-color="var(--accent-600)" stop-opacity="1" />
+    </linearGradient>
+  </defs>
+  <style>
+    .bg { fill: url(#fi1); }
+    .stroke { stroke: white; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+    @keyframes pop { 0% { transform: scale(.96); opacity: 0 } 60% { transform: scale(1.02); opacity: 1 } 100% { transform: scale(1); opacity:1 } }
+    .animate-pop { animation: pop .5s cubic-bezier(.2,.8,.2,1) both; transform-origin: center; }
+  </style>
+  <rect width="64" height="64" rx="12" class="bg" />
+  <g transform="translate(6,6)" class="animate-pop">
+    <path class="stroke" d="M8 24 L20 12 L32 24 L44 12" />
+  </g>
+</svg>

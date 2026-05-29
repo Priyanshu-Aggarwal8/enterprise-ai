@@ -1,0 +1,60 @@
+// Message animations
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.flex.gap-3 {
+  animation: slideIn 0.3s ease-in-out;
+}
+
+// Smooth scrolling
+.overflow-y-auto {
+  scroll-behavior: smooth;
+  
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: rgba(100, 116, 139, 0.3);
+    border-radius: 3px;
+    
+    &:hover {
+      background: rgba(100, 116, 139, 0.5);
+    }
+  }
+}
+
+// Input focus effects
+input, textarea {
+  transition: all 0.2s ease;
+  
+  &:focus {
+    transform: translateY(-1px);
+  }
+}
+
+// Pulsing animation for streaming
+@keyframes streamPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: streamPulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

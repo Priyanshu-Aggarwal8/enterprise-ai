@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet" class="icon-tone">
+  <defs>
+    <linearGradient id="h1" x1="0" x2="1">
+      <stop offset="0" stop-color="var(--accent)" />
+      <stop offset="1" stop-color="var(--accent-600)" />
+    </linearGradient>
+  </defs>
+  <style>
+    .bg-panel { fill: var(--panel); }
+    .accent { fill: url(#h1); }
+    .sub { fill: rgba(15,23,42,0.04); }
+    @keyframes floaty { 0% { transform: translateY(0px) rotate(-1deg);} 50% { transform: translateY(-6px) rotate(1deg);} 100% { transform: translateY(0px) rotate(-1deg);} }
+    .pulse { animation: floaty 5s ease-in-out infinite; transform-origin: center; }
+  </style>
+
+  <g transform="translate(20,20)">
+    <rect x="0" y="24" width="460" height="280" rx="18" class="bg-panel" stroke="var(--card-contrast)" />
+
+    <g transform="translate(30,40)">
+      <g class="pulse">
+        <circle cx="56" cy="44" r="36" class="accent" />
+        <circle cx="130" cy="28" r="10" class="accent" opacity="0.9" />
+      </g>
+
+      <rect x="120" y="16" width="220" height="20" rx="8" class="sub" />
+      <rect x="120" y="44" width="180" height="16" rx="6" class="sub" />
+      <rect x="0" y="100" width="360" height="110" rx="10" class="sub" />
+    </g>
+  </g>
+</svg>

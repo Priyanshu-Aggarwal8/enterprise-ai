@@ -14,15 +14,18 @@
     "@angular/common": "^17.3.0",
     "@angular/compiler": "^17.3.0",
     "@angular/core": "^17.3.0",
+    "@angular/fire": "^17.1.0",
     "@angular/forms": "^17.3.0",
     "@angular/platform-browser": "^17.3.0",
     "@angular/platform-browser-dynamic": "^17.3.0",
     "@angular/router": "^17.3.0",
     "autoprefixer": "^10.5.0",
+    "firebase": "^12.13.0",
     "postcss": "^8.5.15",
     "rxjs": "~7.8.0",
     "tailwindcss": "^3.4.19",
     "tslib": "^2.3.0",
+    "uuid": "^14.0.0",
     "zone.js": "~0.14.3"
   },
   "devDependencies": {

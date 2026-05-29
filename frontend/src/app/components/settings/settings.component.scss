@@ -1,0 +1,25 @@
+// Smooth scrolling
+html {
+  scroll-behavior: smooth;
+}
+
+// Card hover effects
+.api-key-section {
+  transition: box-shadow 0.3s ease;
+  
+  &:hover {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Input focus effects
+input, textarea, select {
+  transition: all 0.2s ease;
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  main {
+    padding: 1rem;
+  }
+}

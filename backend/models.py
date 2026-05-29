@@ -16,6 +16,8 @@ class Organization(Base):
     spaces = relationship("Space", back_populates="organization", cascade="all, delete-orphan")
     secret = relationship("OrganizationSecret", back_populates="organization", uselist=False, cascade="all, delete-orphan")
     documents = relationship("DocumentChunk", back_populates="organization", cascade="all, delete-orphan")
+    custom_tools = relationship("CustomTool", back_populates="organization", cascade="all, delete-orphan")
+    users = relationship("User", back_populates="organization", cascade="all, delete-orphan")
 
 class Space(Base):
     __tablename__ = "spaces"
@@ -49,6 +51,30 @@ class DocumentChunk(Base):
     content = Column(Text, nullable=False)
     
     embedding = Column(Vector(384), nullable=False)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    organization = relationship("Organization")
+
+class CustomTool(Base):
+    __tablename__ = "custom_tools"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    org_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String, nullable=False)
+    description = Column(String, nullable=False)
+    python_code = Column(Text, nullable=False) 
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    organization = relationship("Organization")
+
+class User(Base):
+    __tablename__ = "users"
+
+    uid = Column(String, primary_key=True, index=True)
+    email = Column(String, unique=True, index=True, nullable=False)
+    
+    org_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=True)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

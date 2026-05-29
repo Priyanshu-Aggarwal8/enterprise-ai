@@ -1,26 +1,75 @@
-<div class="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
-  <header class="bg-slate-900 text-white shadow-md border-b border-slate-700 z-10">
+<div class="h-screen w-screen flex flex-col bg-app font-sans text-default">
+  
+  <!-- Header - Hidden on login/onboarding -->
+  <header *ngIf="!(isLoginPage$ | async) && !(isOnboardingPage$ | async)" class="card shadow-sm z-10 flex-shrink-0" style="border-bottom:1px solid var(--card-contrast)">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      
-      <div class="flex items-center gap-8">
+      <div class="flex items-center gap-6">
         <div class="flex items-center gap-3">
-          <div class="w-8 h-8 bg-sky-500 rounded flex items-center justify-center font-bold text-lg">AI</div>
-          <h1 class="text-xl font-semibold tracking-tight">Enterprise Multi-Agent</h1>
+          <div class="w-8 h-8 bg-sky-600 rounded-lg flex items-center justify-center font-bold text-white text-sm">AI</div>
+          <h1 class="text-lg font-bold tracking-tight hidden sm:block">Enterprise Multi-Agent</h1>
         </div>
         
-        <nav class="hidden md:flex gap-4">
-          <a routerLink="/" routerLinkActive="bg-slate-800 text-white" [routerLinkActiveOptions]="{exact: true}" class="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-700 hover:text-white transition-colors cursor-pointer">Workspace</a>
-          <a routerLink="/settings" routerLinkActive="bg-slate-800 text-white" class="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-700 hover:text-white transition-colors cursor-pointer">Organization Settings</a>
+        <nav class="hidden md:flex gap-2">
+          <a routerLink="/landing" class="px-3 py-2 rounded-lg text-sm font-medium muted hover:text-default hover:bg-panel transition-colors">Home</a>
+          <a routerLink="/workspace" 
+             routerLinkActive="bg-panel text-default"
+             [routerLinkActiveOptions]="{exact: true}" 
+             class="px-3 py-2 rounded-lg text-sm font-medium muted hover:text-default hover:bg-panel transition-colors">
+            Workspace
+          </a>
+          <a routerLink="/settings" 
+             routerLinkActive="bg-panel text-default"
+             class="px-3 py-2 rounded-lg text-sm font-medium muted hover:text-default hover:bg-panel transition-colors">
+            Settings
+          </a>
         </nav>
       </div>
 
-      <div class="text-sm font-medium text-slate-400">
-        Status: <span class="text-emerald-400 flex-inline items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> Secure Connection</span>
+      <div class="flex items-center gap-4">
+        <div class="relative">
+          <button (click)="showKeyDropdown = !showKeyDropdown" class="flex items-center gap-2 text-xs sm:text-sm muted">
+            <span [ngClass]="hasOrgKey ? 'w-3 h-3 rounded-full bg-emerald-500 animate-pulse' : 'w-3 h-3 rounded-full bg-red-500'" class="inline-block"></span>
+            <span *ngIf="hasOrgKey" class="hidden sm:inline">API Key</span>
+            <span *ngIf="!hasOrgKey" class="hidden sm:inline">No Key</span>
+          </button>
+          <div *ngIf="showKeyDropdown" class="absolute right-0 mt-2 w-72 card p-3 z-20" style="border:1px solid var(--card-contrast)">
+            <div *ngIf="secretSummary && secretSummary.length > 0; else noKey">
+              <div *ngFor="let s of secretSummary" class="py-2 border-b last:border-b-0">
+                <div class="text-sm font-semibold">{{ s.provider }}</div>
+                <div class="text-xs muted">Preview: {{ s.key_preview }}</div>
+                <div class="text-xs muted mt-1">Added: {{ s.created_at | date:'short' }}</div>
+              </div>
+              <div class="mt-3 text-right">
+                <a routerLink="/settings" class="text-sm text-sky-600 hover:underline">Manage Keys</a>
+              </div>
+            </div>
+            <ng-template #noKey>
+              <div class="text-sm muted">No API key configured. Add one in Settings.</div>
+            </ng-template>
+          </div>
+        </div>
+
+        <button (click)="toggleDarkMode()" title="Toggle dark mode" class="p-2 rounded-lg" style="border-radius:8px">
+          <svg *ngIf="!darkMode" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 muted" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zM4.22 5.47a1 1 0 011.42 0L6.8 6.6a1 1 0 11-1.42 1.42L4.22 6.9a1 1 0 010-1.42zM2 10a1 1 0 011-1h1a1 1 0 110 2H3a1 1 0 01-1-1zm13 0a1 1 0 011-1h1a1 1 0 110 2h-1a1 1 0 01-1-1zM4.22 14.53a1 1 0 010-1.42l1.16-1.16a1 1 0 111.42 1.42l-1.16 1.16a1 1 0 01-1.42 0zM10 16a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM14.78 14.53a1 1 0 011.42 0l1.16 1.16a1 1 0 11-1.42 1.42l-1.16-1.16a1 1 0 010-1.42z"/></svg>
+          <svg *ngIf="darkMode" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor"><path d="M17.293 13.293A8 8 0 116.707 2.707a7 7 0 0010.586 10.586z"/></svg>
+        </button>
+
+        <div class="relative">
+          <button (click)="showProfileDropdown = !showProfileDropdown" class="flex items-center gap-2 p-1 rounded-full hover:bg-slate-100">
+            <div class="w-8 h-8 rounded-full bg-sky-600 text-white flex items-center justify-center font-semibold">U</div>
+          </button>
+          <div *ngIf="showProfileDropdown" class="absolute right-0 mt-2 w-40 card p-2 z-20" style="border:1px solid var(--card-contrast)">
+            <button (click)="openProfile()" class="w-full text-left px-3 py-2 rounded hover:bg-panel">Open Profile</button>
+            <button (click)="logout()" class="w-full text-left px-3 py-2 rounded hover:bg-panel">Logout</button>
+          </div>
+        </div>
       </div>
     </div>
   </header>
 
-  <main class="flex-1 flex overflow-hidden">
+  <!-- Main Content Area -->
+  <main class="flex-1 overflow-auto w-full">
     <router-outlet></router-outlet>
+    <app-toasts></app-toasts>
   </main>
 </div>

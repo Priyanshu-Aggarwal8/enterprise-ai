@@ -27,3 +27,6 @@ __pycache__/
 *.pyo
 *.pyd
 .pytest_cache/
+
+backend/firebase-adminsdk.json
+firebase-adminsdk.json

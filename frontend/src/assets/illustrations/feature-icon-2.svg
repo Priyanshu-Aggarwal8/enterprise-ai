@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" class="icon-tone">
+  <defs>
+    <linearGradient id="fi2" x1="0" x2="1">
+      <stop offset="0" stop-color="var(--primary)" />
+      <stop offset="1" stop-color="var(--primary-600)" />
+    </linearGradient>
+  </defs>
+  <style>
+    .bg { fill: url(#fi2); }
+    .fg { fill: white; }
+    @keyframes floaty { 0% { transform: translateY(0px) rotate(-1deg);} 50% { transform: translateY(-6px) rotate(1deg);} 100% { transform: translateY(0px) rotate(-1deg);} }
+    .animate-float { animation: floaty 6s ease-in-out infinite; transform-origin: center; }
+  </style>
+  <rect width="64" height="64" rx="12" class="bg" />
+  <g class="animate-float" transform="translate(0,0)">
+    <circle cx="32" cy="22" r="8" class="fg" />
+    <rect x="18" y="36" width="28" height="6" rx="3" class="fg" />
+  </g>
+</svg>

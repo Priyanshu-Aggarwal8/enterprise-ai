@@ -1,0 +1,92 @@
+<div class="min-h-screen flex flex-col landing-hero landing-theme">
+  <main class="flex-1">
+    <div class="max-w-7xl mx-auto px-6 py-16 bg-app">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+        <!-- Hero -->
+        <div>
+          <h2 class="hero-heading text-4xl md:text-5xl leading-tight mb-4">Build intelligent agents and collaborate securely</h2>
+          <p class="hero-sub text-lg mb-6">Create workflows, add custom tools, and bring your own LLM keys. Enterprise controls, scoped organizations, and fast onboarding.</p>
+
+          <div class="flex gap-4 mb-8">
+            <button (click)="goToLogin()" class="px-6 py-3 rounded-lg font-semibold btn-elevated cta-primary">Get Started</button>
+            <a routerLink="/documents" class="px-6 py-3 rounded-lg btn-elevated cta-secondary">View Docs</a>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="p-4 card card-shadow flex items-center gap-4 feature-card">
+              <img src="/assets/illustrations/feature-icon-1.svg" class="w-12 h-12" alt="scoping" />
+              <div>
+                <div class="font-semibold dark:text-white">Organization Scoping</div>
+                  <div class="text-xs muted">Separate keys and data per team.</div>
+              </div>
+            </div>
+              <div class="p-4 card card-shadow flex items-center gap-4 feature-card">
+              <img src="/assets/illustrations/feature-icon-2.svg" class="w-12 h-12" alt="tools" />
+              <div>
+                <div class="font-semibold dark:text-white">Custom Tools</div>
+                  <div class="text-xs muted">Create Python tools your agents can call.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live demo / feature card -->
+        <div class="hidden md:block">
+          <div class="card card-shadow p-8 rounded-2xl feature-card animate-pop">
+            <div class="text-sm muted mb-4">Agent Preview</div>
+            <div class="p-6 rounded bg-panel">
+                  <div class="h-48 flex flex-col gap-3">
+                <div class="flex items-center gap-3">
+                  <img src="/assets/illustrations/hero-illustration.svg" class="w-16 h-16 rounded-full" alt="AI" />
+                  <div>
+                    <div class="text-sm font-semibold">Sales Assistant</div>
+                    <div class="text-xs muted">Answer customer queries with company data</div>
+                  </div>
+                </div>
+                <div class="mt-3 flex-1 card p-3 rounded overflow-auto feature-card">
+                  <div class="text-sm muted">User: What's the Q3 revenue?</div>
+                  <div class="mt-2 text-sm" style="color:var(--accent); font-weight:600">Agent: Pulling aggregated sales from your CRM...</div>
+                </div>
+                  </div>
+                </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Features grid -->
+      <section class="mt-16">
+        <h3 class="text-2xl font-bold mb-6 text-default dark:text-white">Features</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div class="p-6 card feature-card rounded-lg">
+            <div class="text-lg font-semibold mb-2 dark:text-white">Secure Key Storage</div>
+            <div class="text-sm muted">Encrypted BYOK storage with preview-only access.</div>
+          </div>
+          <div class="p-6 card feature-card rounded-lg">
+            <div class="text-lg font-semibold mb-2 dark:text-white">Custom Tools</div>
+            <div class="text-sm muted">Define tools to extend agent capabilities.</div>
+          </div>
+          <div class="p-6 card feature-card rounded-lg">
+            <div class="text-lg font-semibold mb-2 dark:text-white">Document Ingestion</div>
+            <div class="text-sm muted">Upload PDFs and make them searchable by agents.</div>
+          </div>
+          <div class="p-6 card feature-card rounded-lg">
+            <div class="text-lg font-semibold mb-2 dark:text-white">Session IDs</div>
+            <div class="text-sm muted">Persistent, per-agent session context for continuity.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Testimonial -->
+      <section class="mt-12 bg-gradient-to-r from-white to-sky-50 dark:from-slate-900 dark:to-slate-900 p-8 rounded-lg">
+        <div class="max-w-4xl mx-auto text-center">
+          <div class="text-xl font-semibold mb-2 dark:text-white">"This platform helped us build production-ready agents in days, not months."</div>
+          <div class="text-sm muted">— Alex Johnson, Head of AI at Acme Corp</div>
+        </div>
+      </section>
+
+      <footer class="mt-12 py-6">
+        <div class="max-w-7xl mx-auto px-6 text-sm muted">© 2026 Enterprise AI Agent Platform</div>
+      </footer>
+    </div>
+  </main>
+</div>

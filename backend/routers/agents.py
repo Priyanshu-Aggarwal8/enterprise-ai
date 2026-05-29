@@ -1,9 +1,13 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, HTTPException
 from pydantic import BaseModel
 import redis.asyncio as aioredis
 import json
 from config import settings
 import worker 
+from sqlalchemy.ext.asyncio import AsyncSession
+from database import get_db
+import models
+from security import require_organization
 
 router = APIRouter(
     prefix="/agents",
@@ -17,8 +21,23 @@ class AgentRunRequest(BaseModel):
     prompt: str
 
 @router.post("/run")
-async def run_agent(request: AgentRunRequest):
-    task = worker.execute_agent_task.delay(request.org_id, request.agent_id, request.session_id, request.prompt)
+async def run_agent(
+    request: AgentRunRequest,
+    current_user: models.User = Depends(require_organization),
+    db: AsyncSession = Depends(get_db)
+):
+    # Validate that the request org_id matches the current user's org_id
+    if str(request.org_id) != str(current_user.org_id):
+        raise HTTPException(
+            status_code=403, 
+            detail="Unauthorized. You do not have permission to run agents for this organization."
+        )
+    
+    task = worker.execute_agent.delay(
+        prompt=request.prompt,
+        org_id=request.org_id,
+        session_id=request.session_id
+    )
     
     return {
         "message": "Agent execution queued successfully",

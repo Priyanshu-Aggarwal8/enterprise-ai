@@ -23,3 +23,26 @@ class SecretResponse(BaseModel):
     key_preview: str
     
     model_config = ConfigDict(from_attributes=True)
+
+class SecretUpdate(BaseModel):
+    provider: Optional[str] = None
+    raw_api_key: Optional[str] = None
+
+class CustomToolCreate(BaseModel):
+    name: str
+    description: str
+    python_code: str
+
+class CustomToolResponse(BaseModel):
+    id: UUID
+    name: str
+    description: str
+    python_code: str
+    
+    model_config = ConfigDict(from_attributes=True)
+
+class AgentRunRequest(BaseModel):
+    org_id: str
+    prompt: str
+    session_id: str
+    agent_id: str

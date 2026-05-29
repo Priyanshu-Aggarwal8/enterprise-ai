@@ -1,0 +1,12 @@
+<div class="fixed right-6 top-6 z-50 flex flex-col gap-3">
+  <div *ngFor="let m of messages" class="max-w-sm w-full">
+    <div class="p-3 rounded-lg shadow-lg flex items-start gap-3" [ngClass]="{
+      'card text-default': m.type === 'info',
+      'bg-emerald-50 text-emerald-800': m.type === 'success',
+      'bg-red-50 text-red-800': m.type === 'error'
+    }" style="border:1px solid var(--card-contrast)">
+      <div class="flex-1 text-sm">{{ m.text }}</div>
+      <button (click)="dismiss(m.id)" class="text-xs muted hover:text-default">Dismiss</button>
+    </div>
+  </div>
+</div>

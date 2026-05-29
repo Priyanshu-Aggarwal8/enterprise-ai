@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80" class="icon-tone">
+  <defs>
+    <linearGradient id="av1" x1="0" x2="1">
+      <stop offset="0" stop-color="var(--primary)" />
+      <stop offset="1" stop-color="var(--primary-600)" />
+    </linearGradient>
+  </defs>
+  <style>
+    .bg { fill: url(#av1); }
+    .initial { fill: white; font-family: Inter, Arial, sans-serif; font-weight:600; }
+  </style>
+  <circle cx="40" cy="40" r="38" class="bg" />
+  <text x="50%" y="50%" text-anchor="middle" dy=".35em" font-size="28" class="initial">AJ</text>
+</svg>

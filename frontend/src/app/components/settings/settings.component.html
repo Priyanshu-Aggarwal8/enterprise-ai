@@ -1,80 +1,261 @@
-<div class="flex-1 overflow-y-auto p-8 bg-slate-50 w-full max-w-5xl mx-auto">
-  <h2 class="text-3xl font-bold text-slate-900 mb-8">Organization Settings</h2>
+<div class="h-screen w-screen flex flex-col bg-app">
+  <!-- Header is provided by global app component. Removed duplicate here. -->
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-    
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-      <div class="flex items-center gap-3 mb-4">
-        <div class="w-8 h-8 rounded bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">1</div>
-        <h3 class="text-lg font-semibold text-slate-800">Create Workspace</h3>
-      </div>
-      <p class="text-sm text-slate-500 mb-6">Create an isolated organization tenant. Data and execution environments are completely separated per organization.</p>
+  <!-- Main Content -->
+  <main class="flex-1 overflow-y-auto">
+    <div class="max-w-4xl mx-auto px-6 py-12">
       
-      <div class="flex flex-col gap-3">
-        <label class="text-sm font-medium text-slate-700">Organization Name</label>
-        <div class="flex gap-3">
-          <input type="text" [(ngModel)]="newOrgName" placeholder="e.g., Wayne Enterprises" 
-                 class="flex-1 p-2 border border-slate-300 rounded focus:ring-2 focus:ring-sky-500 outline-none text-sm">
-          <button (click)="createOrganization()" [disabled]="!newOrgName.trim() || isCreatingOrg"
-                  class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700 disabled:opacity-50 transition-colors">
-            Create
-          </button>
+      <!-- Onboarding Mode -->
+      <div *ngIf="isOnboarding && !hasOrganization" class="space-y-8">
+        
+        <!-- Progress Indicator -->
+        <div class="flex items-center gap-4 mb-12">
+          <div class="flex items-center justify-center w-10 h-10 rounded-full" style="background:var(--accent); color:white;">1</div>
+          <div class="h-1 flex-1" style="background:linear-gradient(90deg,var(--accent),var(--accent-600)); opacity:.12"></div>
+          <div class="flex items-center justify-center w-10 h-10 rounded-full bg-panel muted font-bold text-sm">2</div>
+          <div class="h-1 flex-1 bg-panel" style="opacity:.6"></div>
+          <div class="flex items-center justify-center w-10 h-10 rounded-full bg-panel muted font-bold text-sm">3</div>
         </div>
-      </div>
 
-      <div class="mt-8">
-        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Existing Organizations</h4>
-        <div class="flex flex-col gap-2 max-h-40 overflow-y-auto">
-          <div *ngFor="let org of organizations" class="p-3 bg-slate-50 border border-slate-200 rounded flex justify-between items-center text-sm">
-            <span class="font-medium text-slate-700">{{ org.name }}</span>
-            <span class="font-mono text-xs text-slate-400">{{ org.id }}</span>
+        <div>
+          <h2 class="text-4xl font-bold text-default mb-2">Welcome to Enterprise AI Platform</h2>
+          <p class="text-xl muted">Let's set up your organization workspace</p>
+        </div>
+
+        <!-- Organization Selection -->
+        <div class="card p-8 rounded-2xl">
+          <h3 class="text-2xl font-bold text-default mb-2">Step 1: Choose Your Organization</h3>
+          <p class="muted mb-8">Join an existing team or create a new workspace. This decision is permanent.</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 divide-y md:divide-y-0 md:divide-x divide-slate-300">
+            
+            <!-- Create Organization -->
+            <div class="pb-8 md:pb-0 md:pr-8 flex flex-col">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v2h8v-2zM16 11a2 2 0 10-4 0v2h4v-2z" /></svg>
+                </div>
+                <h4 class="text-lg font-semibold text-default">Create New</h4>
+              </div>
+              <p class="text-sm muted mb-6">Start a brand new organization. You'll be the owner and can invite team members.</p>
+              
+              <input type="text" 
+                     [(ngModel)]="newOrgName" 
+                     placeholder="e.g., Wayne Enterprises" 
+                     class="w-full px-4 py-3 border" style="border-color:var(--card-contrast); border-radius:8px; background:var(--panel);" />
+              
+                    <button (click)="createOrganization()" 
+                      [disabled]="!newOrgName.trim() || isCreatingOrg"
+                      class="w-full py-3 px-4 btn-accent font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg">
+                {{ isCreatingOrg ? 'Creating...' : '✨ Create Organization' }}
+              </button>
+            </div>
+
+            <!-- Join Organization -->
+            <div class="pt-8 md:pt-0 md:pl-8 flex flex-col">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-lg bg-sky-100 text-sky-600 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path d="M12 6a4 4 0 110-8 4 4 0 010 8zM16 11h-3.5a6.5 6.5 0 00-6 3.666V16a1 1 0 001 1h12a1 1 0 001-1v-1.334A6.5 6.5 0 0016 11z" /></svg>
+                </div>
+                <h4 class="text-lg font-semibold text-default">Join Existing</h4>
+              </div>
+              <p class="text-sm muted mb-6">Join an existing organization using the workspace ID shared by your team administrator.</p>
+              
+              <input type="text" 
+                     [(ngModel)]="joinOrgId" 
+                     placeholder="e.g., 550e8400-e29b..." 
+                     class="w-full px-4 py-3 border" style="border-color:var(--card-contrast); border-radius:8px; background:var(--panel); font-family:monospace;" />
+              
+              <div *ngIf="joinErrorMessage" class="text-red-600 text-sm mb-3 p-3" style="background:rgba(220,38,38,0.06); border-radius:8px; border:1px solid rgba(220,38,38,0.12)">
+                {{ joinErrorMessage }}
+              </div>
+              
+              <button (click)="joinOrganization()" 
+                      [disabled]="!joinOrgId.trim() || isJoiningOrg"
+                      class="w-full py-3 px-4 btn-accent font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg">
+                {{ isJoiningOrg ? 'Joining...' : '🔗 Join Organization' }}
+              </button>
+            </div>
           </div>
-          <p *ngIf="organizations.length === 0" class="text-sm text-slate-500 italic">No organizations found.</p>
         </div>
       </div>
+
+      <!-- API Key Setup (Onboarding or Regular) -->
+      <div *ngIf="(isOnboarding && hasOrganization) || (!isOnboarding && hasOrganization)" class="space-y-8">
+        
+        <!-- Onboarding: Progress -->
+        <div *ngIf="isOnboarding" class="flex items-center gap-4 mb-12">
+          <div class="flex items-center justify-center w-10 h-10 rounded-full" style="background:var(--accent); color:white;">✓</div>
+          <div class="h-1 flex-1" style="background:linear-gradient(90deg,var(--accent),var(--accent-600)); opacity:.12"></div>
+          <div class="flex items-center justify-center w-10 h-10 rounded-full" style="background:var(--accent); color:white;">2</div>
+          <div class="h-1 flex-1 bg-panel" style="opacity:.6"></div>
+          <div class="flex items-center justify-center w-10 h-10 rounded-full bg-panel muted font-bold text-sm">3</div>
+        </div>
+
+        <!-- API Key Section -->
+        <div class="api-key-section card p-8 rounded-2xl">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" /></svg>
+            </div>
+            <h3 class="text-2xl font-bold text-default">
+              {{ isOnboarding ? 'Step 2: Add Your API Key' : 'Manage API Keys (BYOK)' }}
+            </h3>
+          </div>
+          <p class="muted mb-8">
+            {{ isOnboarding ? 'Provide your own LLM API key. Keys are immediately encrypted with AES-256.' : 'Securely store your LLM provider keys. All keys are encrypted end-to-end.' }}
+          </p>
+
+          <div class="flex flex-col gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-default mb-2">AI Provider</label>
+              <select [(ngModel)]="provider" 
+                      class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-sm bg-slate-50 cursor-not-allowed" 
+                      disabled>
+                <option value="google">Google Gemini API</option>
+              </select>
+              <p class="text-xs muted mt-2">Get your key from <a href="https://ai.google.dev" target="_blank" class="text-sky-600 hover:text-sky-700">ai.google.dev</a></p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-default mb-2">API Key</label>
+              <input type="password" 
+                     [(ngModel)]="rawApiKey" 
+                     placeholder="AIzaSy..." 
+                     class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-sm font-mono bg-slate-50">
+              <p class="text-xs muted mt-2">🔒 Your key will be encrypted immediately and never logged</p>
+            </div>
+
+                <button (click)="addApiKey()" 
+                  [disabled]="!rawApiKey.trim() || isAddingKey || !selectedOrgId"
+                  class="w-full py-3 px-4 btn-accent font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg">
+              {{ isAddingKey ? 'Encrypting...' : '🔐 Encrypt & Save Key' }}
+            </button>
+
+              <div *ngIf="keySuccessMessage" 
+                class="p-4 rounded-lg text-sm font-medium" [ngClass]="{'text-emerald-700': keySuccessMessage.includes('✅'),'text-red-700': !keySuccessMessage.includes('✅')}" style="border-radius:8px; border:1px solid var(--card-contrast); background:var(--panel)">
+              {{ keySuccessMessage }}
+            </div>
+
+            <!-- Existing Secrets -->
+            <div *ngIf="currentSecrets && currentSecrets.length > 0" class="mt-4">
+              <h4 class="text-sm font-semibold text-default mb-2">Saved Keys</h4>
+              <div class="space-y-3">
+                <div *ngFor="let s of currentSecrets" class="flex items-center justify-between p-3 card" style="border:1px solid var(--card-contrast)">
+                  <div class="text-sm">
+                    <div class="font-semibold">{{ s.provider }}</div>
+                    <div class="text-xs muted">Preview: {{ s.key_preview }}</div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button (click)="editSecret(s)" class="px-3 py-1 bg-sky-600 text-white rounded text-sm">Edit</button>
+                    <button (click)="deleteSecret(s.id)" class="px-3 py-1 bg-red-600 text-white rounded text-sm">Delete</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Secret delete confirmation -->
+          <div *ngIf="deletingSecretId" class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div class="flex items-center justify-between">
+              <div class="text-sm text-red-700">Are you sure you want to delete this API key?</div>
+              <div class="flex items-center gap-2">
+                <button (click)="confirmDeleteSecret()" class="px-3 py-1 bg-red-600 text-white rounded">Yes, delete</button>
+                <button (click)="cancelDeleteSecret()" class="px-3 py-1 bg-slate-200 rounded">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Custom Tools Section (Only in settings mode, not onboarding) -->
+        <div *ngIf="!isOnboarding" class="card p-8 rounded-2xl">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-10 h-10 rounded-lg" style="background:rgba(124,58,237,0.08); color:var(--accent); display:flex; align-items:center; justify-content:center;">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path d="M5.5 13a3.5 3.5 0 01-.369-6.98 4 4 0 117.753-1.3A4.5 4.5 0 1113.5 13H11V9.413l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13H5.5z" /></svg>
+            </div>
+            <h3 class="text-2xl font-bold text-default">Custom Tools</h3>
+          </div>
+          <p class="muted mb-8">Create and save custom Python tools for your agents. Tools are scoped to this organization.</p>
+
+          <div class="flex flex-col gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-default mb-2">Tool Name</label>
+              <input type="text" 
+                     [(ngModel)]="toolName" 
+                     placeholder="e.g., web_scraper" 
+                     class="w-full px-4 py-3 border" style="border-color:var(--card-contrast); border-radius:8px; background:var(--panel);">
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-default mb-2">Description</label>
+              <input type="text" 
+                     [(ngModel)]="toolDescription" 
+                     placeholder="What does this tool do?" 
+                     class="w-full px-4 py-3 border" style="border-color:var(--card-contrast); border-radius:8px; background:var(--panel);">
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-default mb-2">Python Code</label>
+              <textarea [(ngModel)]="toolCode" 
+                        class="w-full px-4 py-3 border" style="border-color:var(--card-contrast); border-radius:8px; background:var(--panel); height:12rem; font-family:monospace;" 
+                        placeholder='def run(input_string: str) -> str:
+    """Your custom logic here"""
+    return f"Processed: {input_string}"'></textarea>
+              <p class="text-xs muted mt-2">Function must be named <code class="bg-panel px-2 py-1 rounded">run(input_string: str) -> str</code></p>
+            </div>
+
+            <button (click)="saveCustomTool()" 
+                    [disabled]="!toolName.trim() || !toolCode.trim() || isSavingTool"
+                    class="w-full py-3 px-4 btn-accent font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg">
+              {{ isSavingTool ? 'Saving...' : '💾 Save Custom Tool' }}
+            </button>
+
+            <div *ngIf="toolSuccessMessage" class="p-4 rounded-lg" style="border:1px solid var(--card-contrast); background:var(--panel);">
+              {{ toolSuccessMessage }}
+            </div>
+          </div>
+
+          <div *ngIf="customTools.length > 0" class="mt-8">
+            <h4 class="font-semibold text-default mb-4 text-lg">Saved Tools</h4>
+            <div class="grid gap-4">
+              <div *ngFor="let tool of customTools" class="p-4 card" style="border:1px solid var(--card-contrast)">
+                <div class="flex items-start justify-between">
+                  <div>
+                    <div class="font-semibold text-default">{{ tool.name }}</div>
+                    <div class="text-sm muted mt-1">{{ tool.description }}</div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button (click)="editTool(tool)" class="px-3 py-1 bg-sky-600 text-white rounded text-sm">Edit</button>
+                    <button (click)="deleteCustomTool(tool.id)" class="px-3 py-1 bg-red-600 text-white rounded text-sm">Delete</button>
+                  </div>
+                </div>
+                <div class="text-xs muted mt-3 font-mono p-3 card" style="border:1px solid var(--card-contrast); overflow:auto; max-height:6rem;">
+                  {{ tool.python_code }}
+                </div>
+              </div>
+              <!-- Tool delete confirmation -->
+              <div *ngIf="deletingToolId" class="mt-4 p-4" style="background:rgba(220,38,38,0.06); border-radius:8px; border:1px solid rgba(220,38,38,0.12)">
+                <div class="flex items-center justify-between">
+                  <div class="text-sm text-red-700">Are you sure you want to delete this tool?</div>
+                  <div class="flex items-center gap-2">
+                    <button (click)="confirmDeleteTool()" class="px-3 py-1 bg-red-600 text-white rounded">Yes, delete</button>
+                    <button (click)="cancelDeleteTool()" class="px-3 py-1 bg-slate-200 rounded">Cancel</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Onboarding: Complete Button -->
+        <div *ngIf="isOnboarding && keySuccessMessage.includes('✅')" class="text-center py-8">
+          <p class="muted mb-4">Your organization is ready! Redirecting to workspace...</p>
+          <div class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold shadow-lg">
+            <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+            Setup Complete
+          </div>
+        </div>
+      </div>
+
     </div>
-
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-      <div class="flex items-center gap-3 mb-4">
-        <div class="w-8 h-8 rounded bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">2</div>
-        <h3 class="text-lg font-semibold text-slate-800">Inject API Key (BYOK)</h3>
-      </div>
-      <p class="text-sm text-slate-500 mb-6">Securely store your LLM provider keys. Keys are immediately encrypted via AES-256 and are never stored in plaintext.</p>
-
-      <div class="flex flex-col gap-4">
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">Select Organization</label>
-          <select [(ngModel)]="selectedOrgId" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-sky-500 outline-none text-sm bg-white">
-            <option value="" disabled>Select an org...</option>
-            <option *ngFor="let org of organizations" [value]="org.id">{{ org.name }}</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">AI Provider</label>
-          <select [(ngModel)]="provider" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-sky-500 outline-none text-sm bg-slate-50 cursor-not-allowed" disabled>
-            <option value="google">Google Gemini</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">Raw API Key</label>
-          <input type="password" [(ngModel)]="rawApiKey" placeholder="AIzaSy..." 
-                 class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-mono">
-        </div>
-
-        <button (click)="addApiKey()" [disabled]="!selectedOrgId || !rawApiKey.trim() || isAddingKey"
-                class="w-full mt-2 px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded hover:bg-emerald-700 disabled:opacity-50 transition-colors flex justify-center items-center gap-2">
-          <svg *ngIf="!isAddingKey" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-          Encrypt & Save Key
-        </button>
-
-        <div *ngIf="keySuccessMessage" class="mt-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm rounded flex items-start gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
-          <span>{{ keySuccessMessage }}</span>
-        </div>
-
-      </div>
-    </div>
-  </div>
+  </main>
 </div>

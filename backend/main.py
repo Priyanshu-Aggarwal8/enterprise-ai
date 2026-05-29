@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from database import engine, Base
 import models
-from routers import organizations, agents, documents
+from routers import organizations, agents, documents, tools, users
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
@@ -34,6 +34,8 @@ app.add_middleware(
 app.include_router(organizations.router)
 app.include_router(agents.router)
 app.include_router(documents.router)
+app.include_router(tools.router)
+app.include_router(users.router)
 
 @app.get("/health")
 async def health_check():

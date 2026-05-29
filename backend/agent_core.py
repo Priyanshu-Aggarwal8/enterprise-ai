@@ -7,19 +7,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.tools import tool
 from langgraph.prebuilt import create_react_agent
 from langgraph.checkpoint.postgres import PostgresSaver
 from langchain_huggingface import HuggingFaceEmbeddings 
+from langchain_core.tools import tool, StructuredTool
 from config import settings
 
 redis_client = redis.from_url(settings.redis_url)
 sync_db_url = settings.database_url.replace("+asyncpg", "")
-
-@tool
-def calculate_multiply(a: int, b: int) -> int:
-    """Useful for multiplying two numbers together. Always use this for multiplication."""
-    return a * b
 
 def run_agent_workflow(prompt: str, task_id: str, api_key: str, session_id: str, org_id: str):
     llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0, api_key=api_key)
@@ -53,9 +48,35 @@ def run_agent_workflow(prompt: str, task_id: str, api_key: str, session_id: str,
                 
                 return "\n\n---\n\n".join([r[0] for r in results])
             
+    tools = [search_company_documents]
 
-    tools = [calculate_multiply, search_company_documents]
+    with psycopg.connect(sync_db_url) as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT name, description, python_code FROM custom_tools WHERE org_id = %s", (org_id,))
+            custom_db_tools = cur.fetchall()
+            
+            for t_name, t_desc, t_code in custom_db_tools:
+                def create_dynamic_function(code_string):
+                    namespace = {}
+                    exec(code_string, globals(), namespace)
+                    
+                    for name, obj in namespace.items():
+                        if callable(obj) and not name.startswith("__"):
+                            return obj
+                    
+                    def dummy_fallback() -> str:
+                        return "Error: No valid Python function found in the tool code."
+                    return dummy_fallback
+
+                dynamic_tool = StructuredTool.from_function(
+                    func=create_dynamic_function(t_code),
+                    name=t_name,
+                    description=t_desc
+                )
+                tools.append(dynamic_tool) 
+                print(f"AGENT TOOL: Successfully loaded custom tool -> {t_name}")
     
+
     channel_name = f"channel_{task_id}"
     redis_client.publish(channel_name, json.dumps({"status": "started", "message": "Agent initialized..."}))
     
@@ -80,7 +101,7 @@ def run_agent_workflow(prompt: str, task_id: str, api_key: str, session_id: str,
                             final_message = raw_content
                             
                 elif node_name == "tools":
-                    msg = "Agent is reading company documents..." 
+                    msg = "Agent is reading company documents or executing a tool..." 
                 else:
                     msg = f"Agent is at step: {node_name}"
                     
