@@ -40,3 +40,8 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+backend/firebase-adminsdk.json
+firebase-adminsdk.json
+
+/frontend/src/environments/environments
