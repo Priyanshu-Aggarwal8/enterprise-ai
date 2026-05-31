@@ -3,8 +3,8 @@
   <div class="flex-1 flex flex-row overflow-hidden">
     
     <!-- Documents Sidebar -->
-    <aside class="w-80 card p-6 flex flex-col gap-4 overflow-y-auto card-shadow flex-shrink-0" style="border-right:1px solid var(--card-contrast)">
-      <div *ngIf="errorMessage" class="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm font-medium">
+    <aside class="w-80 p-6 flex flex-col gap-4 overflow-y-auto flex-shrink-0" style="background:var(--bg-sidebar); color:var(--text-primary); border-right:1px solid var(--card-contrast)">
+      <div *ngIf="errorMessage" class="p-4 alert-danger rounded-lg text-sm font-medium">
         <div class="font-semibold mb-1">⚠️ Setup Required</div>
         {{ errorMessage }}
       </div>
@@ -13,24 +13,24 @@
         <h2 class="text-xs font-bold muted uppercase tracking-widest mb-3">Documents</h2>
         <div *ngIf="documents.length === 0" class="text-sm muted">No documents uploaded yet.</div>
         <ul class="space-y-3">
-          <li *ngFor="let d of documents" class="flex items-center justify-between p-2 rounded hover:bg-slate-50">
+          <li *ngFor="let d of documents" class="flex items-center justify-between p-2 rounded hover:bg-panel transition-colors">
             <div class="flex items-center gap-3">
-              <div class="w-8 h-8 bg-panel rounded flex items-center justify-center text-sm muted">PDF</div>
+              <div class="w-8 h-8 bg-surface rounded flex items-center justify-center text-sm muted" style="border:1px solid var(--card-contrast)">PDF</div>
               <div>
-                <div class="text-sm font-medium truncate" style="max-width:160px">{{ d.filename }}</div>
+                <div class="text-sm font-medium truncate" style="max-width:160px; color:var(--text-primary)">{{ d.filename }}</div>
                 <div class="text-xs muted">{{ d.count }} chunks • {{ d.uploaded_at | date:'short' }}</div>
               </div>
             </div>
             <div class="flex items-center gap-2">
-              <button (click)="deleteDocument(d.filename)" title="Delete" class="text-xs text-red-600 hover:underline">Delete</button>
+              <button (click)="deleteDocument(d.filename)" title="Delete" class="text-xs" style="color:var(--danger);">Delete</button>
             </div>
           </li>
         </ul>
       </div>
 
-      <div class="mt-auto text-xs muted">
-        <div class="mb-1">Status</div>
-        <div class="p-3 bg-panel rounded-lg text-xs" style="border:1px solid var(--card-contrast)">
+      <div class="mt-auto text-xs" style="color:var(--text-secondary)">
+        <div class="mb-1" style="color:var(--text-primary)">Status</div>
+        <div class="p-3" style="background:var(--bg-panel); border-radius:8px; border:1px solid var(--card-contrast); color:var(--text-secondary)">
           <p *ngIf="hasActiveKey"><strong>Ready to chat:</strong> ✅ Yes</p>
           <p *ngIf="!hasActiveKey && orgId"><strong>Ready to chat:</strong> ❌ No API key configured</p>
           <p *ngIf="!orgId"><strong>Ready to chat:</strong> ❌ Missing org</p>
@@ -39,7 +39,7 @@
     </aside>
 
     <!-- Chat Area -->
-    <div class="flex-1 flex flex-col bg-surface overflow-hidden card-shadow" style="border-left:1px solid var(--card-contrast)">
+    <div class="flex-1 flex flex-col overflow-hidden" style="background:var(--bg-chat); border-left:1px solid var(--card-contrast)">
       
       <!-- Messages -->
       <div class="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
@@ -55,20 +55,20 @@
              [ngClass]="{'justify-end': msg.role === 'user', 'justify-start': msg.role !== 'user'}">
           
           <!-- Agent Avatar -->
-          <div *ngIf="msg.role === 'agent'" class="w-8 h-8 rounded-full bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center flex-shrink-0">
-            <span class="text-white font-bold text-xs">AI</span>
+          <div *ngIf="msg.role === 'agent'" class="w-8 h-8 rounded-full avatar-accent flex-shrink-0">
+            <span class="font-bold text-xs">AI</span>
           </div>
 
           <!-- Message Bubble -->
           <div [class.max-w-md]="msg.role === 'user'" [class.max-w-2xl]="msg.role !== 'user'" class="flex flex-col">
-            <div class="px-4 py-3 rounded-2xl shadow-sm text-sm"
+            <div class="px-4 py-3 rounded-2xl text-sm"
                  [ngClass]="{
-                   'bg-sky-600 text-white rounded-br-none': msg.role === 'user',
-                   'card text-default rounded-bl-none': msg.role === 'agent',
-                   'bg-emerald-50 text-emerald-800 border border-emerald-200 font-mono text-xs rounded-lg w-full text-center': msg.role === 'system'
+                   'user-bubble': msg.role === 'user',
+                   'agent-bubble': msg.role === 'agent',
+                   'system-bubble': msg.role === 'system'
                  }" [ngStyle]="msg.role === 'agent' ? {'border':'1px solid var(--card-contrast)'} : {}">
               
-              <span [class.animate-pulse]="msg.isStreaming">
+              <span [class.animate-pulse]="msg.isStreaming" [style.color]="msg.role==='user' ? 'white' : ''">
                 {{ msg.content }}
               </span>
               
@@ -76,33 +76,34 @@
           </div>
 
           <!-- User Avatar -->
-          <div *ngIf="msg.role === 'user'" class="w-8 h-8 rounded-full bg-gradient-to-br from-slate-600 to-slate-800 flex items-center justify-center flex-shrink-0">
-            <span class="text-white font-bold text-xs">YOU</span>
+          <div *ngIf="msg.role === 'user'" class="w-8 h-8 rounded-full avatar-user flex-shrink-0">
+            <span class="font-bold text-xs">YOU</span>
           </div>
         </div>
       </div>
 
       <!-- Input Area -->
-      <div class="border-t" style="border-color:var(--card-contrast); background:var(--surface); padding:1.5rem;">
+      <div class="border-t" style="border-color:var(--card-contrast); background:var(--bg-input); padding:1.5rem;">
         <div class="max-w-4xl mx-auto">
           <div class="relative flex gap-3 items-center">
             <!-- Upload button on the left -->
             <input #fileInput type="file" accept="application/pdf" (change)="onFileSelected($event)" hidden />
-            <button (click)="fileInput.click()" title="Upload document" class="w-10 h-10 bg-panel rounded-lg flex items-center justify-center text-xl muted hover:bg-panel" style="border-radius:8px">
+            <button (click)="fileInput.click()" title="Upload document" class="w-10 h-10 rounded-lg flex items-center justify-center text-xl muted" style="border-radius:8px; background:var(--bg-panel); border:1px solid var(--card-contrast); color:var(--text-primary)">
               +
             </button>
 
-            <input type="text" 
+                 <input type="text" 
                    [(ngModel)]="prompt" 
                    (keyup.enter)="submitPrompt()"
                    [disabled]="isExecuting || !canChat"
                    placeholder="Ask the agent a question..." 
-                   class="flex-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-sky-500 outline-none transition-all shadow-sm"
-                   style="border-color:var(--card-contrast); background:var(--surface); color:var(--text);">
+                   class="flex-1 px-4 py-3 border rounded-lg focus:outline-none transition-all"
+                   style="border-color:transparent; background:var(--bg-input); color:var(--text-primary); caret-color:var(--text-primary);">
 
-            <button (click)="submitPrompt()" 
-                    [disabled]="isExecuting || !prompt.trim() || !canChat"
-                    class="px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-lg">
+                <button (click)="submitPrompt()" 
+                  [disabled]="isExecuting || !prompt.trim() || !canChat"
+                  class="px-6 py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                  [ngStyle]="{'background':'linear-gradient(90deg,var(--accent),var(--accent-600))','color':'white','box-shadow':'var(--shadow-medium)'}">
               <span *ngIf="!isExecuting">Send</span>
               <span *ngIf="isExecuting" class="flex items-center gap-2">
                  <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -111,7 +112,7 @@
             </button>
           </div>
           
-          <p *ngIf="!canChat" class="text-xs text-red-600 mt-2 font-medium">
+          <p *ngIf="!canChat" class="text-xs text-danger mt-2 font-medium">
             <span *ngIf="!orgId">⚠️ Complete organization setup in Settings before chatting</span>
             <span *ngIf="orgId && !hasActiveKey">⚠️ No API key configured — add it in Settings</span>
           </p>

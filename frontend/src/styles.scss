@@ -8,6 +8,9 @@ html, body {
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg);
+  color: var(--text);
+  transition: background-color .2s ease, color .2s ease;
 }
 
 :root {
@@ -39,6 +42,10 @@ html, body {
   --pink: #EB459E;
 
   --mention-bg: rgba(88,101,242,0.18);
+  --success-soft: rgba(87,242,135,0.08);
+  --danger-soft: rgba(237,66,69,0.08);
+  --warning-soft: rgba(254,231,92,0.08);
+  --purple-soft: rgba(124,58,237,0.08);
 }
 
 /* Material-inspired button subtle elevation */
@@ -110,34 +117,17 @@ html, body {
 }
 
 /* Discord-inspired palette overrides for landing (local scope) */
-:root.landing-theme {
-  /* Discord-inspired palette */
+.landing-theme {
   --discord-blurple: #5865F2;     /* primary blurple */
   --discord-blurple-600: #4752c4; /* darker */
   --accent: var(--discord-blurple);
   --accent-600: var(--discord-blurple-600);
-
-  /* Tones */
-  --bg: #f6f7fb;       /* very light */
-  --panel: #ffffff;    /* card surfaces */
-  --surface: #ffffff;
-  --text: #0b1220;     /* strong text */
-  --muted: #6b7280;    /* subdued text */
-  --card-contrast: rgba(11,18,32,0.04);
-
-  /* Typography tuning */
   --hero-weight: 900;
   --hero-size: 2.75rem; /* 44px base -> will scale with utility classes */
   --hero-leading: 1.02;
 }
 
-.dark {
-  --bg: #071227;
-  --panel: #071827;
-  --surface: #071227;
-  --card-contrast: rgba(255,255,255,0.04);
-  --text: #e6eef8;
-  --muted: #9ca3af;
+.dark .landing-theme {
   --accent: var(--primary);
   --accent-600: var(--primary-600);
 }
@@ -150,12 +140,33 @@ html, body {
 .muted { color: var(--muted); }
 
 /* Landing specific - Discord-like hero */
-.landing-hero { padding: 4.5rem 0; background: linear-gradient(90deg, rgba(88,101,242,0.06) 0%, rgba(88,101,242,0.02) 30%, rgba(255,255,255,0) 100%); }
+.landing-hero { padding: 4.5rem 0; background-color: var(--bg); background-image: linear-gradient(90deg, rgba(88,101,242,0.08) 0%, rgba(88,101,242,0.03) 30%, rgba(255,255,255,0) 100%); background-blend-mode: screen; }
 .landing-hero .hero-heading { color: var(--text); font-weight: var(--hero-weight); line-height: var(--hero-leading); text-shadow: 0 1px 0 rgba(255,255,255,0.6); font-size: clamp(2rem, 4vw, 3.25rem); }
 .landing-hero .hero-sub { color: var(--muted); font-size: 1.125rem; }
 .landing-hero .cta-primary { background: linear-gradient(90deg,var(--accent),var(--accent-600)); color: white; box-shadow: 0 14px 40px rgba(88,101,242,0.14); padding: 0.85rem 1.25rem; }
 .landing-hero .cta-secondary { background: transparent; border:1px solid var(--card-contrast); color:var(--text); padding:0.75rem 1rem; }
 .landing-hero .hero-panel { background: linear-gradient(180deg, var(--panel), var(--surface)); border:1px solid var(--card-contrast); }
+
+/* Ensure landing theme forces readable theme colors in its scope */
+.landing-theme .text-default,
+.landing-theme h1,
+.landing-theme h2,
+.landing-theme h3,
+.landing-theme h4,
+.landing-theme h5,
+.landing-theme h6,
+.landing-theme p,
+.landing-theme .muted,
+.landing-theme footer {
+  color: var(--text) !important;
+}
+.landing-theme .card {
+  background-color: var(--panel) !important;
+  border-color: var(--card-contrast) !important;
+}
+.landing-theme .muted {
+  color: var(--muted) !important;
+}
 
 /* Slightly more room under hero CTAs */
 .landing-hero .cta-row { margin-bottom: 1.5rem; }
@@ -167,6 +178,35 @@ html, body {
 /* Accent / CTA */
 .btn-accent { background: linear-gradient(90deg,var(--accent),var(--accent-600)); color: white; }
 .btn-accent:hover { filter: brightness(.98); }
+.btn-secondary { background: transparent; color: var(--text); border: 1px solid var(--card-contrast); }
+.btn-secondary:hover { background: var(--panel); }
+.btn-success { background: var(--success); color: black; }
+.btn-danger { background: var(--danger); color: white; }
+
+.header-link {
+  color: var(--text);
+  opacity: .88;
+  transition: opacity .2s ease, background-color .2s ease, color .2s ease;
+}
+.header-link:hover { opacity: 1; }
+.header-button { color: var(--text); transition: color .2s ease, background-color .2s ease, opacity .2s ease; }
+
+.login-card { box-shadow: 0 32px 90px rgba(0,0,0,0.22); border-color: rgba(255,255,255,0.08); }
+.login-card .input-field { box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); }
+.login-bg { background-image: radial-gradient(circle at top left, rgba(88,101,242,0.14), transparent 24%), radial-gradient(circle at top right, rgba(124,58,237,0.12), transparent 20%), radial-gradient(circle at bottom left, rgba(254,231,92,0.1), transparent 26%), linear-gradient(180deg, var(--bg), rgba(0,0,0,0)); min-height: 100vh; }
+
+.landing-theme img { filter: brightness(1.25) saturate(0.85); opacity: .94; }
+.landing-theme .feature-card img,
+.landing-theme .hero-panel img { filter: brightness(1.25) saturate(0.85); opacity: .94; }
+
+.status-dot-success { background: var(--success); }
+.status-dot-danger { background: var(--danger); }
+
+.alert-danger { background: var(--danger-soft); border: 1px solid rgba(237,66,69,0.16); color: var(--danger); }
+.alert-success { background: var(--success-soft); border: 1px solid rgba(87,242,135,0.16); color: var(--success); }
+.alert-purple { background: var(--purple-soft); border: 1px solid rgba(124,58,237,0.16); color: var(--accent); }
+
+.hover-bg-panel:hover { background: var(--panel); }
 
 /* Soft shadow for cards in both themes */
 .card-shadow { box-shadow: 0 8px 24px rgba(2,6,23,0.06); }
@@ -193,3 +233,71 @@ html, body {
 /* feature card hover tilt */
 .feature-card { transition: transform .18s ease, box-shadow .18s ease; }
 .feature-card:hover { transform: translateY(-6px) scale(1.01); box-shadow: 0 12px 30px rgba(2,6,23,0.08); }
+
+/* Chat-specific bubble styles mapping to design tokens */
+.user-bubble { background: linear-gradient(90deg,var(--accent),var(--accent-600)); color: white; border-radius: 18px 18px 4px 18px; }
+.agent-bubble { background: var(--bg-panel); color: var(--text-primary); border-radius: 18px 18px 18px 4px; }
+.system-bubble { background: rgba(255,255,255,0.03); color: var(--text-secondary); font-family: monospace; font-size: .875rem; border-radius: 10px; }
+
+/* Input and chat container helpers */
+.chat-container { background: var(--bg-chat); }
+.input-area { background: var(--bg-input); border-top: 1px solid var(--card-contrast); }
+
+/* Backwards-compat utility mappings for common Tailwind color classes used in templates */
+/* Accent / primary */
+.text-sky-600, .text-indigo-600, .text-sky-700 { color: var(--accent) !important; }
+.bg-sky-600, .bg-indigo-600 { background: var(--accent) !important; color: white !important; }
+.bg-sky-100 { background-color: rgba(88,101,242,0.06) !important; }
+
+/* Surface / slate mappings */
+.bg-slate-50 { background-color: var(--surface) !important; }
+.border-slate-300 { border-color: var(--card-contrast) !important; }
+
+/* Danger / error */
+.text-red-700, .text-red-600 { color: var(--danger) !important; }
+.text-danger { color: var(--danger) !important; }
+.bg-red-600 { background: var(--danger) !important; color: white !important; }
+
+/* Success / confirm */
+.bg-emerald-600 { background: var(--success) !important; color: black !important; }
+.bg-emerald-100 { background-color: rgba(87,242,135,0.08) !important; }
+.text-emerald-600, .text-emerald-700 { color: var(--success) !important; }
+
+/* Sky link colors */
+.text-sky-600, .text-sky-700 { color: var(--accent) !important; }
+
+/* Utility for small muted text already uses --muted but ensure legacy tailwind opacity mapping */
+.opacity-80 { opacity: .8 !important; }
+
+/* Ensure code inline blocks adapt */
+code { background: var(--panel); color: var(--text); padding: 0.15rem 0.4rem; border-radius: 6px; }
+
+/* Ensure headings and base text use tokens */
+h1, h2, h3, h4, h5, h6 { color: var(--text); }
+p, label, span, li, a { color: var(--text); }
+
+/* Login page specific helpers */
+.login-bg { background: linear-gradient(180deg, var(--bg), rgba(0,0,0,0)) !important; }
+.logo-badge { background: linear-gradient(90deg,var(--accent),var(--accent-600)); color: white; }
+.brand-title { font-weight: 800; background: linear-gradient(90deg, var(--accent), var(--accent-600)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.link-accent { color: var(--accent); }
+.error-box { background: rgba(237,66,69,0.06); border: 1px solid rgba(237,66,69,0.12); padding: 0.75rem; border-radius: 8px; color: var(--danger); }
+
+/* Feature panel for landing */
+.feature-panel { background: var(--panel); border: 1px solid var(--card-contrast); border-radius: 12px; padding: 1rem; }
+
+/* Avatar and status helpers */
+.avatar-surface { background: rgba(255,255,255,0.06); }
+.dark .avatar-surface { background: rgba(255,255,255,0.06); }
+.status-dot { background: var(--accent); }
+
+/* Semantic buttons and avatars */
+.avatar-accent { background: var(--accent); color: white; display: inline-flex; align-items: center; justify-content: center; }
+.btn-danger { background: var(--danger); color: white; }
+.btn-success { background: var(--success); color: black; }
+
+/* avatar for local user (subtle gradient) */
+.avatar-user { background: linear-gradient(90deg,#4E5058,#686B73); color: white; display:inline-flex; align-items:center; justify-content:center; }
+
+
+

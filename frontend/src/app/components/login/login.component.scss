@@ -14,6 +14,27 @@
   animation: blob 7s infinite;
 }
 
+.login-bg-dot {
+  width: 24rem;
+  height: 24rem;
+  border-radius: 9999px;
+  mix-blend-mode: multiply;
+  filter: blur(3rem);
+  opacity: 0.1;
+}
+
+.login-bg-dot.login-accent {
+  background: var(--accent);
+}
+
+.login-bg-dot.login-purple {
+  background: linear-gradient(135deg, var(--accent), var(--accent-600));
+}
+
+.login-bg-dot.login-warning {
+  background: var(--warning);
+}
+
 .animation-delay-2000 {
   animation-delay: 2s;
 }

@@ -44,4 +44,4 @@ Thumbs.db
 backend/firebase-adminsdk.json
 firebase-adminsdk.json
 
-/frontend/src/environments/environments
+/src/environments

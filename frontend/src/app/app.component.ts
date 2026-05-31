@@ -4,7 +4,7 @@ import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } fro
 import { AuthService } from './services/auth.service';
 import { ApiService } from './services/api.service';
 import { ToastComponent } from './components/toast/toast.component';
-import { Observable, Subscription } from 'rxjs';
+import { Observable, Subscription, lastValueFrom } from 'rxjs';
 import { map, filter, startWith } from 'rxjs/operators';
 
 @Component({
@@ -40,16 +40,13 @@ export class AppComponent {
     startWith(this.router.url.includes('/onboarding'))
   );
 
-  logout() {
-    this.auth.logout().subscribe({
-      next: () => {
-        this.router.navigate(['/login']);
-      },
-      error: (err) => {
-        console.error('Logout failed', err);
-        this.router.navigate(['/login']);
-      }
-    });
+  async logout() {
+    try {
+      await lastValueFrom(this.auth.logout());
+    } catch (err: any) {
+      console.error('Logout failed', err);
+    }
+    this.router.navigate(['/login']);
   }
 
   constructor() {
