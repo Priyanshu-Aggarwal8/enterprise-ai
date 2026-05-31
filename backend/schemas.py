@@ -33,12 +33,20 @@ class CustomToolCreate(BaseModel):
     description: str
     python_code: str
 
+class BoundAgentSummary(BaseModel):
+    id: UUID
+    name: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class CustomToolResponse(BaseModel):
     id: UUID
     name: str
     description: str
     python_code: str
-    
+    bound_agents: List[BoundAgentSummary] = []
+
     model_config = ConfigDict(from_attributes=True)
 
 class AgentRunRequest(BaseModel):
@@ -46,3 +54,21 @@ class AgentRunRequest(BaseModel):
     prompt: str
     session_id: str
     agent_id: str
+
+class AgentDefinitionCreate(BaseModel):
+    name: str
+    purpose: str
+    system_prompt: str
+    model_name: str = "gemini-2.5-flash"
+    tool_ids: List[UUID] = []
+
+class AgentDefinitionResponse(BaseModel):
+    id: UUID
+    name: str
+    purpose: str
+    system_prompt: str
+    model_name: str
+    tool_ids: List[UUID] = []
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)

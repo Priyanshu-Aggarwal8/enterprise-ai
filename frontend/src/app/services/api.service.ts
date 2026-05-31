@@ -14,12 +14,28 @@ export interface CustomTool {
   name: string;
   description: string;
   python_code: string;
+  bound_agents?: BoundAgentSummary[];
+}
+
+export interface BoundAgentSummary {
+  id: string;
+  name: string;
 }
 
 export interface Secret {
   id: string;
   provider: string;
   key_preview: string;
+}
+
+export interface AgentDefinition {
+  id: string;
+  name: string;
+  purpose: string;
+  system_prompt: string;
+  model_name: string;
+  tool_ids?: string[];
+  created_at?: string;
 }
 
 @Injectable({
@@ -133,6 +149,48 @@ export class ApiService {
     const id = orgId || this.getOrgId();
     // Deletion is scoped server-side by current user org, filename param is required
     return this.http.delete(`${this.baseUrl}/documents?filename=${encodeURIComponent(filename)}`);
+  }
+
+  // Agent definitions
+  getAgents(): Observable<AgentDefinition[]> {
+    return this.http.get<AgentDefinition[]>(`${this.baseUrl}/agents`);
+  }
+
+  createAgent(
+    name: string,
+    purpose: string,
+    systemPrompt: string,
+    modelName: string,
+    toolIds: string[] = []
+  ): Observable<AgentDefinition> {
+    return this.http.post<AgentDefinition>(`${this.baseUrl}/agents`, {
+      name,
+      purpose,
+      system_prompt: systemPrompt,
+      model_name: modelName,
+      tool_ids: toolIds
+    });
+  }
+
+  updateAgent(
+    agentId: string,
+    name: string,
+    purpose: string,
+    systemPrompt: string,
+    modelName: string,
+    toolIds: string[] = []
+  ): Observable<AgentDefinition> {
+    return this.http.put<AgentDefinition>(`${this.baseUrl}/agents/${agentId}`, {
+      name,
+      purpose,
+      system_prompt: systemPrompt,
+      model_name: modelName,
+      tool_ids: toolIds
+    });
+  }
+
+  deleteAgent(agentId: string): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/agents/${agentId}`);
   }
 
   runAgent(orgId: string | undefined, agentId: string, sessionId: string, prompt: string): Observable<any> {

@@ -1,74 +1,81 @@
 <div class="h-screen w-screen flex flex-col bg-app font-sans text-default">
-  
-  <!-- Header - Hidden on login/onboarding -->
-  <header *ngIf="!(isLoginPage$ | async) && !(isOnboardingPage$ | async)" class="card shadow-sm z-10 flex-shrink-0" style="border-bottom:1px solid var(--card-contrast)">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      <div class="flex items-center gap-6">
-        <div class="flex items-center gap-3">
+
+  <!-- Unified header (hidden on login / onboarding) -->
+  <header *ngIf="!(isLoginPage$ | async) && !(isOnboardingPage$ | async)"
+          class="app-header card shadow-sm z-10 flex-shrink-0">
+    <div class="app-header__inner max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-4 md:gap-6 min-w-0">
+        <a routerLink="/landing" class="flex items-center gap-3 flex-shrink-0 no-underline">
           <div class="w-8 h-8 logo-badge rounded-lg flex items-center justify-center font-bold text-sm">AI</div>
-          <h1 class="text-lg font-bold tracking-tight hidden sm:block">Enterprise Multi-Agent</h1>
-        </div>
-        
-        <nav class="hidden md:flex gap-2">
-          <a routerLink="/landing" class="px-3 py-2 rounded-lg text-sm font-medium header-link hover:bg-panel transition-colors">Home</a>
-          <a routerLink="/workspace" 
-             routerLinkActive="bg-panel text-default"
-             [routerLinkActiveOptions]="{exact: true}" 
-             class="px-3 py-2 rounded-lg text-sm font-medium header-link hover:bg-panel transition-colors">
-            Workspace
-          </a>
-          <a routerLink="/settings" 
-             routerLinkActive="bg-panel text-default"
-             class="px-3 py-2 rounded-lg text-sm font-medium header-link hover:bg-panel transition-colors">
-            Settings
-          </a>
+          <span class="text-lg font-bold tracking-tight hidden sm:block text-default">Enterprise Multi-Agent</span>
+        </a>
+
+        <nav class="hidden md:flex gap-1">
+          <a routerLink="/landing"
+             routerLinkActive="app-header__nav--active"
+             [routerLinkActiveOptions]="{ exact: true }"
+             class="app-header__nav">Home</a>
+          <a routerLink="/workspace"
+             routerLinkActive="app-header__nav--active"
+             [routerLinkActiveOptions]="{ exact: true }"
+             class="app-header__nav">Workspace</a>
+          <a routerLink="/tools/create" routerLinkActive="app-header__nav--active" class="app-header__nav">Tools</a>
+          <a routerLink="/agents/create" routerLinkActive="app-header__nav--active" class="app-header__nav">Agents</a>
+          <a routerLink="/settings" routerLinkActive="app-header__nav--active" class="app-header__nav">Settings</a>
         </nav>
       </div>
 
-      <div class="flex items-center gap-4">
-        <div class="relative">
-          <button (click)="showKeyDropdown = !showKeyDropdown" class="flex items-center gap-2 text-xs sm:text-sm header-link">
-            <span [ngClass]="hasOrgKey ? 'w-3 h-3 rounded-full status-dot-success animate-pulse' : 'w-3 h-3 rounded-full status-dot-danger'" class="inline-block"></span>
-            <span *ngIf="hasOrgKey" class="hidden sm:inline">API Key</span>
-            <span *ngIf="!hasOrgKey" class="hidden sm:inline">No Key</span>
-          </button>
-          <div *ngIf="showKeyDropdown" class="absolute right-0 mt-2 w-72 card p-3 z-20" style="border:1px solid var(--card-contrast)">
-            <div *ngIf="secretSummary && secretSummary.length > 0; else noKey">
-              <div *ngFor="let s of secretSummary" class="py-2 border-b last:border-b-0">
-                <div class="text-sm font-semibold">{{ s.provider }}</div>
-                <div class="text-xs muted">Preview: {{ s.key_preview }}</div>
-                <div class="text-xs muted mt-1">Added: {{ s.created_at | date:'short' }}</div>
+      <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+        <!-- Public actions on landing when signed out -->
+        <ng-container *ngIf="(isLandingPage$ | async) && !(isLoggedIn$ | async); else appActions">
+          <a routerLink="/login" class="app-header__link hidden sm:inline">Sign in</a>
+          <button type="button" (click)="goToLogin()" class="app-header__cta">Get Started</button>
+        </ng-container>
+
+        <ng-template #appActions>
+          <div class="relative">
+            <button (click)="showKeyDropdown = !showKeyDropdown" class="flex items-center gap-2 text-xs sm:text-sm header-link">
+              <span [ngClass]="hasOrgKey ? 'w-3 h-3 rounded-full status-dot-success animate-pulse' : 'w-3 h-3 rounded-full status-dot-danger'" class="inline-block"></span>
+              <span *ngIf="hasOrgKey" class="hidden sm:inline">API Key</span>
+              <span *ngIf="!hasOrgKey" class="hidden sm:inline">No Key</span>
+            </button>
+            <div *ngIf="showKeyDropdown" class="absolute right-0 mt-2 w-72 card p-3 z-20 app-header__dropdown">
+              <div *ngIf="secretSummary && secretSummary.length > 0; else noKey">
+                <div *ngFor="let s of secretSummary" class="py-2 border-b last:border-b-0 border-theme">
+                  <div class="text-sm font-semibold">{{ s.provider }}</div>
+                  <div class="text-xs muted">Preview: {{ s.key_preview }}</div>
+                  <div class="text-xs muted mt-1">Added: {{ s.created_at | date:'short' }}</div>
+                </div>
+                <div class="mt-3 text-right">
+                  <a routerLink="/settings" class="text-sm link-accent hover:underline">Manage Keys</a>
+                </div>
               </div>
-              <div class="mt-3 text-right">
-                <a routerLink="/settings" class="text-sm link-accent hover:underline">Manage Keys</a>
-              </div>
+              <ng-template #noKey>
+                <div class="text-sm muted">No API key configured. Add one in Settings.</div>
+              </ng-template>
             </div>
-            <ng-template #noKey>
-              <div class="text-sm muted">No API key configured. Add one in Settings.</div>
-            </ng-template>
           </div>
-        </div>
 
-        <button (click)="toggleDarkMode()" title="Toggle dark mode" class="p-2 rounded-lg header-button" style="border-radius:8px">
-          <svg *ngIf="!darkMode" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-default" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zM4.22 5.47a1 1 0 011.42 0L6.8 6.6a1 1 0 11-1.42 1.42L4.22 6.9a1 1 0 010-1.42zM2 10a1 1 0 011-1h1a1 1 0 110 2H3a1 1 0 01-1-1zm13 0a1 1 0 011-1h1a1 1 0 110 2h-1a1 1 0 01-1-1zM4.22 14.53a1 1 0 010-1.42l1.16-1.16a1 1 0 111.42 1.42l-1.16 1.16a1 1 0 01-1.42 0zM10 16a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM14.78 14.53a1 1 0 011.42 0l1.16 1.16a1 1 0 11-1.42 1.42l-1.16-1.16a1 1 0 010-1.42z"/></svg>
-          <svg *ngIf="darkMode" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-warning" viewBox="0 0 20 20" fill="currentColor"><path d="M17.293 13.293A8 8 0 116.707 2.707a7 7 0 0010.586 10.586z"/></svg>
-        </button>
-
-        <div class="relative">
-          <button (click)="showProfileDropdown = !showProfileDropdown" class="flex items-center gap-2 p-1 rounded-full header-button hover:bg-panel">
-            <div class="w-8 h-8 rounded-full avatar-accent flex items-center justify-center font-semibold">U</div>
+          <button (click)="toggleDarkMode()" title="Toggle dark mode" class="p-2 rounded-lg header-button">
+            <svg *ngIf="!darkMode" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-default" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zM4.22 5.47a1 1 0 011.42 0L6.8 6.6a1 1 0 11-1.42 1.42L4.22 6.9a1 1 0 010-1.42zM2 10a1 1 0 011-1h1a1 1 0 110 2H3a1 1 0 01-1-1zm13 0a1 1 0 011-1h1a1 1 0 110 2h-1a1 1 0 01-1-1zM4.22 14.53a1 1 0 010-1.42l1.16-1.16a1 1 0 111.42 1.42l-1.16 1.16a1 1 0 01-1.42 0zM10 16a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM14.78 14.53a1 1 0 011.42 0l1.16 1.16a1 1 0 11-1.42 1.42l-1.16-1.16a1 1 0 010-1.42z"/></svg>
+            <svg *ngIf="darkMode" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-warning" viewBox="0 0 20 20" fill="currentColor"><path d="M17.293 13.293A8 8 0 116.707 2.707a7 7 0 0010.586 10.586z"/></svg>
           </button>
-          <div *ngIf="showProfileDropdown" class="absolute right-0 mt-2 w-40 card p-2 z-20" style="border:1px solid var(--card-contrast)">
-            <button (click)="openProfile()" class="w-full text-left px-3 py-2 rounded hover:bg-panel">Open Profile</button>
-            <button (click)="logout()" class="w-full text-left px-3 py-2 rounded hover:bg-panel">Logout</button>
+
+          <div class="relative">
+            <button (click)="showProfileDropdown = !showProfileDropdown" class="flex items-center gap-2 p-1 rounded-full header-button hover:bg-panel">
+              <div class="w-8 h-8 rounded-full avatar-accent flex items-center justify-center font-semibold text-sm">U</div>
+            </button>
+            <div *ngIf="showProfileDropdown" class="absolute right-0 mt-2 w-40 card p-2 z-20 app-header__dropdown">
+              <button (click)="openProfile()" class="dropdown-item">Open Profile</button>
+              <button (click)="logout()" class="dropdown-item">Logout</button>
+            </div>
           </div>
-        </div>
+        </ng-template>
       </div>
     </div>
   </header>
 
-  <!-- Main Content Area -->
-  <main class="flex-1 overflow-auto w-full">
+  <main class="flex-1 overflow-auto w-full min-h-0">
     <router-outlet></router-outlet>
     <app-toasts></app-toasts>
   </main>

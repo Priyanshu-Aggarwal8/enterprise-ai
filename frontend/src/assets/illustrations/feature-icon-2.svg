@@ -1,19 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" class="icon-tone">
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
   <defs>
-    <linearGradient id="fi2" x1="0" x2="1">
-      <stop offset="0" stop-color="var(--primary)" />
-      <stop offset="1" stop-color="var(--primary-600)" />
+    <linearGradient id="fi2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5865F2" />
+      <stop offset="1" stop-color="#4752C4" />
     </linearGradient>
   </defs>
-  <style>
-    .bg { fill: url(#fi2); }
-    .fg { fill: white; }
-    @keyframes floaty { 0% { transform: translateY(0px) rotate(-1deg);} 50% { transform: translateY(-6px) rotate(1deg);} 100% { transform: translateY(0px) rotate(-1deg);} }
-    .animate-float { animation: floaty 6s ease-in-out infinite; transform-origin: center; }
-  </style>
-  <rect width="64" height="64" rx="12" class="bg" />
-  <g class="animate-float" transform="translate(0,0)">
-    <circle cx="32" cy="22" r="8" class="fg" />
-    <rect x="18" y="36" width="28" height="6" rx="3" class="fg" />
-  </g>
+  <rect width="64" height="64" rx="14" fill="url(#fi2)" />
+  <circle cx="32" cy="24" r="9" fill="#ffffff" opacity="0.95" />
+  <rect x="18" y="38" width="28" height="7" rx="3.5" fill="#ffffff" opacity="0.95" />
+  <rect x="22" y="48" width="20" height="4" rx="2" fill="#ffffff" opacity="0.55" />
 </svg>

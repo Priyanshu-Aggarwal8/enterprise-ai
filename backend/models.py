@@ -17,6 +17,7 @@ class Organization(Base):
     secret = relationship("OrganizationSecret", back_populates="organization", uselist=False, cascade="all, delete-orphan")
     documents = relationship("DocumentChunk", back_populates="organization", cascade="all, delete-orphan")
     custom_tools = relationship("CustomTool", back_populates="organization", cascade="all, delete-orphan")
+    agents = relationship("AgentDefinition", back_populates="organization", cascade="all, delete-orphan")
     users = relationship("User", back_populates="organization", cascade="all, delete-orphan")
 
 class Space(Base):
@@ -67,6 +68,40 @@ class CustomTool(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     organization = relationship("Organization")
+
+    organization = relationship("Organization")
+
+class AgentToolBinding(Base):
+    __tablename__ = "agent_tool_bindings"
+
+    agent_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("agent_definitions.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    tool_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("custom_tools.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+
+class AgentDefinition(Base):
+    __tablename__ = "agent_definitions"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    org_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String, nullable=False)
+    purpose = Column(String, nullable=False)
+    system_prompt = Column(Text, nullable=False)
+    model_name = Column(String, nullable=False, default="gemini-2.5-flash")
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    organization = relationship("Organization", back_populates="agents")
+    tool_bindings = relationship(
+        "AgentToolBinding",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
 
 class User(Base):
     __tablename__ = "users"

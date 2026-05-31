@@ -1,9 +1,9 @@
-<div class="h-screen w-screen flex flex-col bg-app">
+<div class="h-full min-h-screen w-full flex flex-col bg-app">
   <!-- Header is provided by global app component. Removed duplicate here. -->
 
   <!-- Main Content -->
-  <main class="flex-1 overflow-y-auto">
-    <div class="max-w-4xl mx-auto px-6 py-12">
+  <main class="flex-1 overflow-y-auto page-shell">
+    <div class="page-container max-w-4xl">
       
       <!-- Onboarding Mode -->
       <div *ngIf="isOnboarding && !hasOrganization" class="space-y-8">
@@ -27,7 +27,7 @@
           <h3 class="text-2xl font-bold text-default mb-2">Step 1: Choose Your Organization</h3>
           <p class="muted mb-8">Join an existing team or create a new workspace. This decision is permanent.</p>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 divide-y md:divide-y-0 md:divide-x divide-slate-300">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 divide-y md:divide-y-0 md:divide-x divide-theme">
             
             <!-- Create Organization -->
             <div class="pb-8 md:pb-0 md:pr-8 flex flex-col">
@@ -42,7 +42,7 @@
               <input type="text" 
                      [(ngModel)]="newOrgName" 
                      placeholder="e.g., Wayne Enterprises" 
-                     class="w-full px-4 py-3 border" style="border-color:var(--card-contrast); border-radius:8px; background:var(--panel);" />
+                     class="input-field" />
               
                     <button (click)="createOrganization()" 
                       [disabled]="!newOrgName.trim() || isCreatingOrg"
@@ -64,7 +64,7 @@
               <input type="text" 
                      [(ngModel)]="joinOrgId" 
                      placeholder="e.g., 550e8400-e29b..." 
-                     class="w-full px-4 py-3 border" style="border-color:var(--card-contrast); border-radius:8px; background:var(--panel); font-family:monospace;" />
+                     class="input-field font-mono text-sm" />
               
               <div *ngIf="joinErrorMessage" class="alert-danger text-sm mb-3 p-3 rounded-lg">
                 {{ joinErrorMessage }}
@@ -110,8 +110,7 @@
             <div>
               <label class="block text-sm font-semibold text-default mb-2">AI Provider</label>
               <select [(ngModel)]="provider" 
-                      class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-sm bg-surface cursor-not-allowed" 
-                      style="border-color:var(--card-contrast)"
+                      class="select-field text-sm cursor-not-allowed opacity-80" 
                       disabled>
                 <option value="google">Google Gemini API</option>
               </select>
@@ -123,8 +122,7 @@
               <input type="password" 
                      [(ngModel)]="rawApiKey" 
                      placeholder="AIzaSy..." 
-                     class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-sm font-mono bg-surface"
-                     style="border-color:var(--card-contrast)">
+                     class="input-field text-sm font-mono">
               <p class="text-xs muted mt-2">🔒 Your key will be encrypted immediately and never logged</p>
             </div>
 
@@ -143,7 +141,7 @@
             <div *ngIf="currentSecrets && currentSecrets.length > 0" class="mt-4">
               <h4 class="text-sm font-semibold text-default mb-2">Saved Keys</h4>
               <div class="space-y-3">
-                <div *ngFor="let s of currentSecrets" class="flex items-center justify-between p-3 card" style="border:1px solid var(--card-contrast)">
+                <div *ngFor="let s of currentSecrets" class="info-tile flex items-center justify-between gap-3">
                   <div class="text-sm">
                     <div class="font-semibold">{{ s.provider }}</div>
                     <div class="text-xs muted">Preview: {{ s.key_preview }}</div>
@@ -168,7 +166,7 @@
           </div>
         </div>
 
-        <!-- Custom Tools Section (Only in settings mode, not onboarding) -->
+        <!-- Custom Tools (link to dedicated page) -->
         <div *ngIf="!isOnboarding" class="card p-8 rounded-2xl">
           <div class="flex items-center gap-3 mb-2">
             <div class="w-10 h-10 rounded-lg alert-purple flex items-center justify-center">
@@ -176,76 +174,9 @@
             </div>
             <h3 class="text-2xl font-bold text-default">Custom Tools</h3>
           </div>
-          <p class="muted mb-8">Create and save custom Python tools for your agents. Tools are scoped to this organization.</p>
-
-          <div class="flex flex-col gap-4">
-            <div>
-              <label class="block text-sm font-semibold text-default mb-2">Tool Name</label>
-              <input type="text" 
-                     [(ngModel)]="toolName" 
-                     placeholder="e.g., web_scraper" 
-                     class="w-full px-4 py-3 border" style="border-color:var(--card-contrast); border-radius:8px; background:var(--panel);">
-            </div>
-
-            <div>
-              <label class="block text-sm font-semibold text-default mb-2">Description</label>
-              <input type="text" 
-                     [(ngModel)]="toolDescription" 
-                     placeholder="What does this tool do?" 
-                     class="w-full px-4 py-3 border" style="border-color:var(--card-contrast); border-radius:8px; background:var(--panel);">
-            </div>
-
-            <div>
-              <label class="block text-sm font-semibold text-default mb-2">Python Code</label>
-              <textarea [(ngModel)]="toolCode" 
-                        class="w-full px-4 py-3 border" style="border-color:var(--card-contrast); border-radius:8px; background:var(--panel); height:12rem; font-family:monospace;" 
-                        placeholder='def run(input_string: str) -> str:
-    """Your custom logic here"""
-    return f"Processed: {input_string}"'></textarea>
-              <p class="text-xs muted mt-2">Function must be named <code class="bg-panel px-2 py-1 rounded">run(input_string: str) -> str</code></p>
-            </div>
-
-            <button (click)="saveCustomTool()" 
-                    [disabled]="!toolName.trim() || !toolCode.trim() || isSavingTool"
-                    class="w-full py-3 px-4 btn-accent font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg">
-              {{ isSavingTool ? 'Saving...' : '💾 Save Custom Tool' }}
-            </button>
-
-            <div *ngIf="toolSuccessMessage" class="p-4 rounded-lg" style="border:1px solid var(--card-contrast); background:var(--panel);">
-              {{ toolSuccessMessage }}
-            </div>
-          </div>
-
-          <div *ngIf="customTools.length > 0" class="mt-8">
-            <h4 class="font-semibold text-default mb-4 text-lg">Saved Tools</h4>
-            <div class="grid gap-4">
-              <div *ngFor="let tool of customTools" class="p-4 card" style="border:1px solid var(--card-contrast)">
-                <div class="flex items-start justify-between">
-                  <div>
-                    <div class="font-semibold text-default">{{ tool.name }}</div>
-                    <div class="text-sm muted mt-1">{{ tool.description }}</div>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <button (click)="editTool(tool)" class="px-3 py-1 btn-accent rounded text-sm">Edit</button>
-                    <button (click)="deleteCustomTool(tool.id)" class="px-3 py-1 btn-danger rounded text-sm">Delete</button>
-                  </div>
-                </div>
-                <div class="text-xs muted mt-3 font-mono p-3 card" style="border:1px solid var(--card-contrast); overflow:auto; max-height:6rem;">
-                  {{ tool.python_code }}
-                </div>
-              </div>
-              <!-- Tool delete confirmation -->
-              <div *ngIf="deletingToolId" class="mt-4 p-4 alert-danger rounded-lg">
-                <div class="flex items-center justify-between">
-                  <div class="text-sm text-danger">Are you sure you want to delete this tool?</div>
-                  <div class="flex items-center gap-2">
-                    <button (click)="confirmDeleteTool()" class="px-3 py-1 btn-danger rounded">Yes, delete</button>
-                    <button (click)="cancelDeleteTool()" class="px-3 py-1 btn-secondary rounded">Cancel</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <p class="muted mb-6">Tools are shared across your organization. Create and manage them from the dedicated tools page or workspace.</p>
+          <a routerLink="/tools/create" class="inline-block py-3 px-6 btn-accent font-semibold rounded-lg">Open Tool Builder</a>
+          <p *ngIf="customTools.length > 0" class="text-sm muted mt-4">{{ customTools.length }} tool(s) configured for this organization.</p>
         </div>
 
         <!-- Onboarding: Complete Button -->

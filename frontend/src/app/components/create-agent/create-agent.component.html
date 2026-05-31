@@ -1,0 +1,98 @@
+<div class="page-shell">
+  <div class="page-container">
+    <header class="page-header">
+      <div>
+        <h1 class="page-title">Create Agent</h1>
+        <p class="page-subtitle">Define agents with custom prompts and models for your organization.</p>
+      </div>
+      <a routerLink="/workspace" class="btn-ghost">← Back to Workspace</a>
+    </header>
+
+    <div class="form-panel p-8 rounded-2xl space-y-5" [class.form-panel--editing]="isEditing">
+      <div *ngIf="isEditing" class="edit-banner">
+        Editing agent: {{ agentName || 'Untitled' }}
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-default mb-2">Agent Name</label>
+        <input type="text" [(ngModel)]="agentName" placeholder="e.g., Research Assistant" class="input-field" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-default mb-2">Agent Purpose</label>
+        <input type="text" [(ngModel)]="agentPurpose" placeholder="e.g., Summarize internal documents" class="input-field" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-default mb-2">System Prompt</label>
+        <textarea [(ngModel)]="systemPrompt" rows="6" class="textarea-field" style="font-family: inherit;"></textarea>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-default mb-2">Model Name</label>
+        <select [(ngModel)]="modelName" class="select-field">
+          <option *ngFor="let m of modelOptions" [value]="m">{{ m }}</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-default mb-2">Bound Tools</label>
+        <p class="text-xs muted mb-3">Select which organization tools this agent can use at runtime.</p>
+
+        <div *ngIf="availableTools.length === 0" class="info-tile text-sm muted">
+          No tools available yet. <a routerLink="/tools/create" class="link-accent">Create a tool</a> first.
+        </div>
+
+        <div *ngIf="availableTools.length > 0" class="tool-picker space-y-2">
+          <label *ngFor="let tool of availableTools"
+                 class="tool-picker__item"
+                 [class.tool-picker__item--selected]="isToolSelected(tool.id)">
+            <input type="checkbox"
+                   [checked]="isToolSelected(tool.id)"
+                   (change)="toggleTool(tool.id)"
+                   class="tool-picker__checkbox" />
+            <div class="min-w-0">
+              <div class="text-sm font-medium text-default">{{ tool.name }}</div>
+              <div class="text-xs muted truncate">{{ tool.description }}</div>
+            </div>
+          </label>
+        </div>
+
+        <p *ngIf="selectedToolIds.length > 0" class="text-xs muted mt-2">
+          {{ selectedToolIds.length }} tool(s) selected
+        </p>
+      </div>
+
+      <div class="flex gap-3">
+        <button (click)="saveAgent()"
+                [disabled]="!agentName.trim() || !agentPurpose.trim() || !systemPrompt.trim() || isSaving"
+                class="flex-1 py-3 px-4 btn-accent font-semibold rounded-lg disabled:opacity-50">
+          {{ isSaving ? 'Saving...' : (isEditing ? 'Update Agent' : 'Create Agent') }}
+        </button>
+        <button *ngIf="isEditing" (click)="resetForm()" class="btn-ghost py-3">Cancel</button>
+      </div>
+    </div>
+
+    <div *ngIf="savedAgents.length > 0" class="mt-10">
+      <h2 class="text-lg font-bold text-default mb-4">Organization Agents</h2>
+      <div class="space-y-3">
+        <div *ngFor="let agent of savedAgents"
+             class="info-tile"
+             [class.info-tile--active]="isEditing && editingAgentId === agent.id">
+          <div class="flex items-start justify-between gap-4">
+            <div class="min-w-0">
+              <div class="info-tile__value">{{ agent.name }}</div>
+              <div class="info-tile__meta">{{ agent.purpose }}</div>
+              <div class="info-tile__meta mt-1">Model: {{ agent.model_name }}</div>
+              <div class="info-tile__meta">Tools: {{ boundToolNames(agent) }}</div>
+            </div>
+            <div class="flex gap-2 flex-shrink-0">
+              <button (click)="editAgent(agent)" class="px-3 py-1 btn-accent rounded text-sm">Edit</button>
+              <button (click)="deleteAgent(agent.id)" class="px-3 py-1 btn-danger rounded text-sm">Delete</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

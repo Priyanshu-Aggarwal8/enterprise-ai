@@ -16,14 +16,14 @@ sync_db_url = settings.database_url.replace("+asyncpg", "")
 redis_client = redis.from_url(settings.redis_url)
 
 @celery_app.task(name="worker.execute_agent")
-def execute_agent(prompt: str, org_id: str, session_id: str):
+def execute_agent(prompt: str, org_id: str, session_id: str, agent_id: str | None = None):
     """
     Executes the AI workflow. Arguments sent by agents.py:
-    [prompt, org_id, session_id]
+    [prompt, org_id, session_id, agent_id]
     Task ID is automatically provided by Celery via self.request.id
     """
     task_id = execute_agent.request.id
-    print(f"WORKER: Starting AI execution for Task {task_id} (Org: {org_id}, Session: {session_id})")
+    print(f"WORKER: Starting AI execution for Task {task_id} (Org: {org_id}, Session: {session_id}, Agent: {agent_id})")
     channel_name = f"channel_{task_id}"
     
     try:
@@ -43,11 +43,12 @@ def execute_agent(prompt: str, org_id: str, session_id: str):
                 decrypted_api_key = decrypt_api_key(secret_record[0])
 
         final_answer = agent_core.run_agent_workflow(
-            prompt, 
-            task_id, 
-            decrypted_api_key, 
-            session_id, 
-            org_id
+            prompt,
+            task_id,
+            decrypted_api_key,
+            session_id,
+            org_id,
+            agent_id=agent_id,
         )
         
         print(f"WORKER: Execution successful!")

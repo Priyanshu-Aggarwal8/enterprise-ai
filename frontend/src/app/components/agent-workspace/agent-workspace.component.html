@@ -1,124 +1,222 @@
-<div class="h-full w-full flex flex-col bg-app">
-  
-  <div class="flex-1 flex flex-row overflow-hidden">
-    
-    <!-- Documents Sidebar -->
-    <aside class="w-80 p-6 flex flex-col gap-4 overflow-y-auto flex-shrink-0" style="background:var(--bg-sidebar); color:var(--text-primary); border-right:1px solid var(--card-contrast)">
-      <div *ngIf="errorMessage" class="p-4 alert-danger rounded-lg text-sm font-medium">
-        <div class="font-semibold mb-1">⚠️ Setup Required</div>
-        {{ errorMessage }}
-      </div>
+<div class="workspace-root h-full w-full flex flex-col bg-app">
 
-      <div>
-        <h2 class="text-xs font-bold muted uppercase tracking-widest mb-3">Documents</h2>
-        <div *ngIf="documents.length === 0" class="text-sm muted">No documents uploaded yet.</div>
-        <ul class="space-y-3">
-          <li *ngFor="let d of documents" class="flex items-center justify-between p-2 rounded hover:bg-panel transition-colors">
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 bg-surface rounded flex items-center justify-center text-sm muted" style="border:1px solid var(--card-contrast)">PDF</div>
-              <div>
-                <div class="text-sm font-medium truncate" style="max-width:160px; color:var(--text-primary)">{{ d.filename }}</div>
-                <div class="text-xs muted">{{ d.count }} chunks • {{ d.uploaded_at | date:'short' }}</div>
-              </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <button (click)="deleteDocument(d.filename)" title="Delete" class="text-xs" style="color:var(--danger);">Delete</button>
-            </div>
-          </li>
-        </ul>
-      </div>
+  <div class="workspace-shell flex-1 flex flex-row overflow-hidden min-h-0 min-w-0">
 
-      <div class="mt-auto text-xs" style="color:var(--text-secondary)">
-        <div class="mb-1" style="color:var(--text-primary)">Status</div>
-        <div class="p-3" style="background:var(--bg-panel); border-radius:8px; border:1px solid var(--card-contrast); color:var(--text-secondary)">
-          <p *ngIf="hasActiveKey"><strong>Ready to chat:</strong> ✅ Yes</p>
-          <p *ngIf="!hasActiveKey && orgId"><strong>Ready to chat:</strong> ❌ No API key configured</p>
-          <p *ngIf="!orgId"><strong>Ready to chat:</strong> ❌ Missing org</p>
+    <!-- Left panel shell -->
+    <div class="panel-shell panel-shell--left"
+         [class.is-collapsed]="leftCollapsed"
+         [class.is-dragging]="isDragging"
+         [style.width.px]="leftShellWidth"
+         [style.transition]="panelTransition">
+
+      <aside *ngIf="!leftCollapsed" class="panel-content panel-content--left">
+        <div *ngIf="errorMessage" class="p-4 m-3 alert-danger rounded-lg text-sm font-medium flex-shrink-0">
+          <div class="font-semibold mb-1">Setup Required</div>
+          {{ errorMessage }}
         </div>
-      </div>
-    </aside>
 
-    <!-- Chat Area -->
-    <div class="flex-1 flex flex-col overflow-hidden" style="background:var(--bg-chat); border-left:1px solid var(--card-contrast)">
-      
-      <!-- Messages -->
-      <div class="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
-        <div *ngIf="chatHistory.length === 0" class="h-full flex flex-col items-center justify-center text-center muted">
-          <div class="w-16 h-16 rounded-full bg-panel flex items-center justify-center mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        <section class="flex flex-col border-b flex-shrink-0 panel-section">
+          <button type="button" (click)="documentsPanelOpen = !documentsPanelOpen"
+                  class="section-header flex items-center justify-between px-4 py-3 text-left">
+            <h2 class="text-xs font-bold muted uppercase tracking-widest">Documents</h2>
+            <span class="text-xs muted">{{ documentsPanelOpen ? '▼' : '▶' }}</span>
+          </button>
+          <div *ngIf="documentsPanelOpen" class="section-body overflow-y-auto px-4 pb-3 max-h-40">
+            <div *ngIf="documents.length === 0" class="text-sm muted">No documents uploaded yet.</div>
+            <ul class="space-y-2">
+              <li *ngFor="let d of documents" class="flex items-center justify-between p-2 rounded hover:bg-panel transition-colors">
+                <div class="min-w-0">
+                  <div class="text-sm font-medium truncate">{{ d.filename }}</div>
+                  <div class="text-xs muted">{{ d.count }} chunks</div>
+                </div>
+                <button (click)="deleteDocument(d.filename)" class="text-xs flex-shrink-0 ml-2" style="color:var(--danger);">Delete</button>
+              </li>
+            </ul>
           </div>
+        </section>
+
+        <section class="flex flex-col flex-1 min-h-0 panel-section">
+          <button type="button" (click)="toolsPanelOpen = !toolsPanelOpen"
+                  class="section-header flex items-center justify-between px-4 py-3 text-left">
+            <h2 class="text-xs font-bold muted uppercase tracking-widest">Tools</h2>
+            <span class="text-xs muted">{{ toolsPanelOpen ? '▼' : '▶' }}</span>
+          </button>
+          <div *ngIf="toolsPanelOpen" class="section-body flex-1 overflow-y-auto px-4 pb-4 min-h-0">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs muted">{{ customTools.length }} in organization</span>
+              <button (click)="goToCreateTools()" class="text-xs link-accent">+ New</button>
+            </div>
+            <div *ngIf="customTools.length === 0" class="text-sm muted">No tools yet.</div>
+            <ul class="space-y-2">
+              <li *ngFor="let t of customTools"
+                  class="p-2 rounded hover:bg-panel transition-colors"
+                  [class.tool-row--bound]="isToolBoundToSelectedAgent(t.id)">
+                <div class="flex items-center gap-2">
+                  <div class="text-sm font-medium truncate flex-1">{{ t.name }}</div>
+                  <span *ngIf="isToolBoundToSelectedAgent(t.id)" class="tool-bound-badge" title="Bound to selected agent">Active</span>
+                </div>
+                <div class="text-xs muted truncate">{{ t.description }}</div>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <div class="p-4 text-xs flex-shrink-0 status-block">
+          <div class="mb-1 font-medium" style="color:var(--text-primary)">Status</div>
+          <div class="p-3 status-card">
+            <p *ngIf="hasActiveKey && selectedAgentId"><strong>Ready:</strong> Yes</p>
+            <p *ngIf="!hasActiveKey && orgId"><strong>Ready:</strong> No API key</p>
+            <p *ngIf="!selectedAgentId && orgId"><strong>Agent:</strong> Not selected</p>
+            <p *ngIf="!orgId"><strong>Ready:</strong> Missing org</p>
+          </div>
+        </div>
+      </aside>
+
+      <button type="button"
+              class="panel-edge-toggle panel-edge-toggle--left"
+              [attr.title]="leftCollapsed ? 'Expand left panel' : 'Collapse left panel'"
+              (click)="toggleLeftPanel()">
+        <span class="toggle-chevron" [class.is-collapsed]="leftCollapsed">‹</span>
+      </button>
+    </div>
+
+    <!-- Left resize sash -->
+    <div *ngIf="!leftCollapsed"
+         class="resize-sash resize-sash--vertical"
+         [class.is-active]="isDragging && activeDragSide === 'left'"
+         (mousedown)="startLeftResize($event)"
+         title="Drag to resize">
+    </div>
+
+    <!-- Center: chat (flexes with remaining space) -->
+    <main class="workspace-center flex flex-col overflow-hidden min-w-0 flex-1">
+
+      <div class="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-4 chat-scroll">
+        <div *ngIf="chatHistory.length === 0" class="h-full flex flex-col items-center justify-center text-center muted">
           <p class="text-sm font-medium text-default">No messages yet</p>
-          <p class="text-xs muted">Start a conversation with the agent</p>
+          <p class="text-xs muted">Select an agent and start a conversation</p>
         </div>
 
         <div *ngFor="let msg of chatHistory" class="flex gap-3"
              [ngClass]="{'justify-end': msg.role === 'user', 'justify-start': msg.role !== 'user'}">
-          
-          <!-- Agent Avatar -->
+
           <div *ngIf="msg.role === 'agent'" class="w-8 h-8 rounded-full avatar-accent flex-shrink-0">
             <span class="font-bold text-xs">AI</span>
           </div>
 
-          <!-- Message Bubble -->
-          <div [class.max-w-md]="msg.role === 'user'" [class.max-w-2xl]="msg.role !== 'user'" class="flex flex-col">
-            <div class="px-4 py-3 rounded-2xl text-sm"
+          <div [class.max-w-md]="msg.role === 'user'" [class.max-w-2xl]="msg.role !== 'user'" class="flex flex-col min-w-0">
+            <div class="px-4 py-3 rounded-2xl text-sm break-words"
                  [ngClass]="{
                    'user-bubble': msg.role === 'user',
                    'agent-bubble': msg.role === 'agent',
                    'system-bubble': msg.role === 'system'
                  }" [ngStyle]="msg.role === 'agent' ? {'border':'1px solid var(--card-contrast)'} : {}">
-              
               <span [class.animate-pulse]="msg.isStreaming" [style.color]="msg.role==='user' ? 'white' : ''">
                 {{ msg.content }}
               </span>
-              
             </div>
           </div>
 
-          <!-- User Avatar -->
           <div *ngIf="msg.role === 'user'" class="w-8 h-8 rounded-full avatar-user flex-shrink-0">
             <span class="font-bold text-xs">YOU</span>
           </div>
         </div>
       </div>
 
-      <!-- Input Area -->
-      <div class="border-t" style="border-color:var(--card-contrast); background:var(--bg-input); padding:1.5rem;">
-        <div class="max-w-4xl mx-auto">
-          <div class="relative flex gap-3 items-center">
-            <!-- Upload button on the left -->
-            <input #fileInput type="file" accept="application/pdf" (change)="onFileSelected($event)" hidden />
-            <button (click)="fileInput.click()" title="Upload document" class="w-10 h-10 rounded-lg flex items-center justify-center text-xl muted" style="border-radius:8px; background:var(--bg-panel); border:1px solid var(--card-contrast); color:var(--text-primary)">
-              +
-            </button>
+      <div class="chat-input-bar border-t flex-shrink-0">
+        <div class="chat-input-inner w-full mx-auto px-4 sm:px-6 py-4">
+          <div class="flex flex-wrap gap-2 mb-3">
+            <button (click)="goToCreateTools()" class="action-chip">Create Tool</button>
+            <button (click)="goToCreateAgent()" class="action-chip">Create Agent</button>
+            <button (click)="refreshTools()" class="action-chip action-chip--muted">Refresh</button>
+          </div>
 
-                 <input type="text" 
-                   [(ngModel)]="prompt" 
+          <div class="flex gap-2 items-center flex-wrap sm:flex-nowrap">
+            <input #fileInput type="file" accept="application/pdf" (change)="onFileSelected($event)" hidden />
+            <button (click)="fileInput.click()" title="Upload document" class="icon-btn flex-shrink-0">+</button>
+
+            <input type="text"
+                   [(ngModel)]="prompt"
                    (keyup.enter)="submitPrompt()"
                    [disabled]="isExecuting || !canChat"
-                   placeholder="Ask the agent a question..." 
-                   class="flex-1 px-4 py-3 border rounded-lg focus:outline-none transition-all"
-                   style="border-color:transparent; background:var(--bg-input); color:var(--text-primary); caret-color:var(--text-primary);">
+                   placeholder="Ask the agent a question..."
+                   class="chat-prompt-input flex-1 min-w-[10rem]">
 
-                <button (click)="submitPrompt()" 
-                  [disabled]="isExecuting || !prompt.trim() || !canChat"
-                  class="px-6 py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
-                  [ngStyle]="{'background':'linear-gradient(90deg,var(--accent),var(--accent-600))','color':'white','box-shadow':'var(--shadow-medium)'}">
+            <select [(ngModel)]="selectedAgentId" (ngModelChange)="onAgentSelectChange()"
+                    [disabled]="agents.length === 0"
+                    title="Select agent"
+                    class="agent-select flex-shrink-0">
+              <option value="" disabled>Select agent</option>
+              <option *ngFor="let a of agents" [value]="a.id">{{ a.name }}</option>
+            </select>
+
+            <button (click)="submitPrompt()"
+                    [disabled]="isExecuting || !prompt.trim() || !canChat"
+                    class="send-btn flex-shrink-0">
               <span *ngIf="!isExecuting">Send</span>
               <span *ngIf="isExecuting" class="flex items-center gap-2">
-                 <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                 Sending...
+                <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               </span>
             </button>
           </div>
-          
+
+          <p *ngIf="selectedAgent" class="text-xs muted mt-2 truncate">
+            Using <strong>{{ selectedAgent.name }}</strong> — {{ selectedAgent.purpose }}
+          </p>
+
           <p *ngIf="!canChat" class="text-xs text-danger mt-2 font-medium">
-            <span *ngIf="!orgId">⚠️ Complete organization setup in Settings before chatting</span>
-            <span *ngIf="orgId && !hasActiveKey">⚠️ No API key configured — add it in Settings</span>
+            <span *ngIf="!orgId">Complete organization setup in Settings before chatting</span>
+            <span *ngIf="orgId && !hasActiveKey">No API key configured — add it in Settings</span>
+            <span *ngIf="orgId && hasActiveKey && !selectedAgentId">Create or select an agent to chat</span>
           </p>
         </div>
       </div>
+    </main>
+
+    <!-- Right resize sash -->
+    <div *ngIf="!rightCollapsed"
+         class="resize-sash resize-sash--vertical"
+         [class.is-active]="isDragging && activeDragSide === 'right'"
+         (mousedown)="startRightResize($event)"
+         title="Drag to resize">
     </div>
-    
+
+    <!-- Right panel shell -->
+    <div class="panel-shell panel-shell--right"
+         [class.is-collapsed]="rightCollapsed"
+         [class.is-dragging]="isDragging"
+         [style.width.px]="rightShellWidth"
+         [style.transition]="panelTransition">
+
+      <button type="button"
+              class="panel-edge-toggle panel-edge-toggle--right"
+              [attr.title]="rightCollapsed ? 'Expand right panel' : 'Collapse right panel'"
+              (click)="toggleRightPanel()">
+        <span class="toggle-chevron" [class.is-collapsed]="rightCollapsed">›</span>
+      </button>
+
+      <aside *ngIf="!rightCollapsed" class="panel-content panel-content--right">
+        <div class="section-header flex items-center justify-between px-4 py-3 flex-shrink-0">
+          <h2 class="text-xs font-bold muted uppercase tracking-widest">Agents</h2>
+          <button (click)="goToCreateAgent()" class="text-xs link-accent">+ New</button>
+        </div>
+
+        <div class="section-body flex-1 overflow-y-auto px-3 pb-4 min-h-0">
+          <div *ngIf="agents.length === 0" class="text-sm muted px-1">No agents yet.</div>
+          <ul class="space-y-2">
+            <li *ngFor="let a of agents">
+              <button type="button" (click)="selectAgent(a.id)"
+                      class="agent-card w-full text-left p-3 rounded-lg transition-colors"
+                      [class.agent-card--active]="selectedAgentId === a.id">
+                <div class="text-sm font-medium truncate">{{ a.name }}</div>
+                <div class="text-xs muted truncate">{{ a.purpose }}</div>
+                <div class="text-xs muted mt-1">{{ a.model_name }}</div>
+              </button>
+            </li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+
   </div>
 </div>

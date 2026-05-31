@@ -1,34 +1,39 @@
-<div class="p-8">
-  <h2 class="text-2xl font-bold mb-4">Organization Documents</h2>
-  <p class="text-sm muted mb-6">View and manage documents ingested into this organization's workspace.</p>
+<div class="page-shell">
+  <div class="page-container page-container--wide">
+    <header class="page-header">
+      <div>
+        <h1 class="page-title">Organization Documents</h1>
+        <p class="page-subtitle">View and manage documents ingested into this organization's workspace.</p>
+      </div>
+    </header>
 
-  <div *ngIf="loading" class="text-sm muted">Loading...</div>
+    <div *ngIf="loading" class="text-sm muted">Loading...</div>
+    <div *ngIf="documents.length === 0 && !loading" class="info-tile text-sm muted">No documents uploaded yet.</div>
 
-  <div *ngIf="documents.length === 0 && !loading" class="text-sm muted">No documents uploaded yet.</div>
-
-  <div class="space-y-4">
-      <div *ngFor="let d of documents" class="p-4 border rounded card flex items-center justify-between">
-        <div>
-          <div class="font-semibold">{{ d.filename }}</div>
-          <div class="text-xs muted">Chunks: {{ d.chunks }} • Uploaded: {{ d.latest_created_at }}</div>
+    <div class="space-y-3">
+      <div *ngFor="let d of documents" class="info-tile flex items-center justify-between gap-4 flex-wrap">
+        <div class="min-w-0">
+          <div class="info-tile__value truncate">{{ d.filename }}</div>
+          <div class="info-tile__meta">Chunks: {{ d.count ?? d.chunks }} • Uploaded: {{ d.uploaded_at || d.latest_created_at | date:'short' }}</div>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-shrink-0">
           <label class="px-3 py-1 btn-accent rounded cursor-pointer text-sm">
             Replace
             <input type="file" accept="application/pdf" (change)="onFileSelected($event)" class="hidden" />
           </label>
           <button (click)="confirmDelete(d.filename)" class="px-3 py-1 btn-danger rounded text-sm">Delete</button>
+        </div>
+      </div>
     </div>
-  </div>
 
-  <div *ngIf="deletingFilename" class="mt-4 p-4 alert-danger rounded-lg">
-    <div class="flex items-center justify-between">
-      <div class="text-sm text-danger">Delete {{ deletingFilename }}?</div>
-      <div class="flex items-center gap-2">
-        <button (click)="doDelete()" class="px-3 py-1 btn-danger rounded">Yes, delete</button>
-        <button (click)="cancelDelete()" class="px-3 py-1 btn-secondary rounded">Cancel</button>
+    <div *ngIf="deletingFilename" class="mt-4 p-4 alert-danger rounded-lg">
+      <div class="flex items-center justify-between gap-4 flex-wrap">
+        <div class="text-sm">Delete <strong>{{ deletingFilename }}</strong>?</div>
+        <div class="flex items-center gap-2">
+          <button (click)="doDelete()" class="px-3 py-1 btn-danger rounded text-sm">Yes, delete</button>
+          <button (click)="cancelDelete()" class="px-3 py-1 btn-secondary rounded text-sm">Cancel</button>
+        </div>
       </div>
     </div>
   </div>
-
 </div>

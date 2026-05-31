@@ -16,8 +16,47 @@ from config import settings
 redis_client = redis.from_url(settings.redis_url)
 sync_db_url = settings.database_url.replace("+asyncpg", "")
 
-def run_agent_workflow(prompt: str, task_id: str, api_key: str, session_id: str, org_id: str):
-    llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0, api_key=api_key)
+def _load_agent_config(org_id: str, agent_id: str | None) -> tuple[str, str, str]:
+    """Returns (system_prompt, model_name, agent_purpose)."""
+    default_system = (
+        "You are a helpful enterprise AI assistant. Use available tools and "
+        "company documents to answer questions accurately and concisely."
+    )
+    default_model = "gemini-2.5-flash"
+    default_purpose = "General assistant"
+
+    if not agent_id:
+        return default_system, default_model, default_purpose
+
+    with psycopg.connect(sync_db_url) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT system_prompt, model_name, purpose
+                FROM agent_definitions
+                WHERE id = %s AND org_id = %s
+                """,
+                (agent_id, org_id),
+            )
+            row = cur.fetchone()
+            if row:
+                return row[0] or default_system, row[1] or default_model, row[2] or default_purpose
+
+    return default_system, default_model, default_purpose
+
+
+def run_agent_workflow(
+    prompt: str,
+    task_id: str,
+    api_key: str,
+    session_id: str,
+    org_id: str,
+    agent_id: str | None = None,
+):
+    system_prompt, model_name, agent_purpose = _load_agent_config(org_id, agent_id)
+    full_system = f"{system_prompt}\n\nAgent purpose: {agent_purpose}"
+
+    llm = ChatGoogleGenerativeAI(model=model_name, temperature=0, api_key=api_key)
     
     @tool
     def search_company_documents(query: str) -> str:
@@ -52,7 +91,21 @@ def run_agent_workflow(prompt: str, task_id: str, api_key: str, session_id: str,
 
     with psycopg.connect(sync_db_url) as conn:
         with conn.cursor() as cur:
-            cur.execute("SELECT name, description, python_code FROM custom_tools WHERE org_id = %s", (org_id,))
+            if agent_id:
+                cur.execute(
+                    """
+                    SELECT ct.name, ct.description, ct.python_code
+                    FROM custom_tools ct
+                    INNER JOIN agent_tool_bindings atb ON atb.tool_id = ct.id
+                    WHERE atb.agent_id = %s AND ct.org_id = %s
+                    """,
+                    (agent_id, org_id),
+                )
+            else:
+                cur.execute(
+                    "SELECT name, description, python_code FROM custom_tools WHERE org_id = %s AND 1=0",
+                    (org_id,),
+                )
             custom_db_tools = cur.fetchall()
             
             for t_name, t_desc, t_code in custom_db_tools:
@@ -89,7 +142,10 @@ def run_agent_workflow(prompt: str, task_id: str, api_key: str, session_id: str,
         agent_executor = create_react_agent(llm, tools, checkpointer=checkpointer)
         config = {"configurable": {"thread_id": session_id}}
         
-        for event in agent_executor.stream({"messages": [("user", prompt)]}, config=config):
+        for event in agent_executor.stream(
+            {"messages": [("system", full_system), ("user", prompt)]},
+            config=config,
+        ):
             for node_name, node_data in event.items():
                 if node_name == "agent":
                     msg = "Agent is reasoning..."

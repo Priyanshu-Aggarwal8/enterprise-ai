@@ -9,6 +9,8 @@ export const routes: Routes = [
   { path: 'landing', loadComponent: () => import('./components/landing/landing.component').then(m => m.LandingComponent) },
   { path: 'profile', loadComponent: () => import('./components/profile/profile.component').then(m => m.ProfileComponent), canActivate: [authGuard] },
   { path: 'documents', loadComponent: () => import('./components/documents/documents.component').then(m => m.DocumentsComponent), canActivate: [authGuard] },
+  { path: 'tools/create', loadComponent: () => import('./components/create-tools/create-tools.component').then(m => m.CreateToolsComponent), canActivate: [authGuard] },
+  { path: 'agents/create', loadComponent: () => import('./components/create-agent/create-agent.component').then(m => m.CreateAgentComponent), canActivate: [authGuard] },
   { path: '', redirectTo: '/landing', pathMatch: 'full' },
   { path: '**', redirectTo: '/landing' }
 ];

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { AuthService } from './services/auth.service';
@@ -10,21 +10,20 @@ import { map, filter, startWith } from 'rxjs/operators';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ToastComponent], 
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ToastComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
-export class AppComponent {
+export class AppComponent implements OnInit, OnDestroy {
   title = 'Enterprise AI Platform';
-  
+
   private auth = inject(AuthService);
   private api = inject(ApiService);
   private router = inject(Router);
   hasOrgKey: boolean = false;
-  private orgKeySub: Subscription | null = null;
+  private orgIdSub: Subscription | null = null;
   showKeyDropdown: boolean = false;
   secretSummary: any[] | null = null;
-  // Profile dropdown + dark mode
   showProfileDropdown: boolean = false;
   darkMode: boolean = false;
 
@@ -40,6 +39,20 @@ export class AppComponent {
     startWith(this.router.url.includes('/onboarding'))
   );
 
+  isLandingPage$: Observable<boolean> = this.router.events.pipe(
+    filter(event => event instanceof NavigationEnd),
+    map((event: any) => {
+      const url = event.urlAfterRedirects as string;
+      return url === '/landing' || url === '/';
+    }),
+    startWith(this.router.url === '/landing' || this.router.url === '/')
+  );
+
+  isLoggedIn$: Observable<boolean> = this.auth.user$.pipe(
+    map((user) => !!user),
+    startWith(false)
+  );
+
   async logout() {
     try {
       await lastValueFrom(this.auth.logout());
@@ -50,7 +63,7 @@ export class AppComponent {
   }
 
   constructor() {
-    this.orgKeySub = this.auth.orgId$.subscribe(orgId => {
+    this.orgIdSub = this.auth.orgId$.subscribe(orgId => {
       if (orgId) {
         this.api.getSecrets(orgId).subscribe({
           next: (s: any[]) => {
@@ -67,7 +80,6 @@ export class AppComponent {
   }
 
   ngOnInit() {
-    // Initialize dark mode from localStorage
     try {
       const saved = localStorage.getItem('darkMode');
       this.darkMode = saved === 'true';
@@ -92,7 +104,11 @@ export class AppComponent {
     this.router.navigate(['/profile']);
   }
 
+  goToLogin() {
+    this.router.navigate(['/login']);
+  }
+
   ngOnDestroy() {
-    if (this.orgKeySub) this.orgKeySub.unsubscribe();
+    if (this.orgIdSub) this.orgIdSub.unsubscribe();
   }
 }

@@ -46,6 +46,22 @@ export class ProfileComponent implements OnInit {
     });
   }
 
+  get displayName(): string {
+    if (!this.email) return 'User';
+    const local = this.email.split('@')[0] || this.email;
+    return local.replace(/[._-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+
+  get initials(): string {
+    if (!this.email) return 'U';
+    const local = this.email.split('@')[0] || '';
+    const parts = local.split(/[._-]+/).filter(Boolean);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return (local.slice(0, 2) || 'U').toUpperCase();
+  }
+
   copyOrgId() {
     if (this.orgId) navigator.clipboard.writeText(this.orgId);
   }
