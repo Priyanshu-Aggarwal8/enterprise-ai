@@ -14,26 +14,59 @@ async def sync_user_account(
     token: HTTPAuthorizationCredentials = Depends(security),
     db: AsyncSession = Depends(get_db)
 ):
+    print("=== SYNC CALLED ===")
+
     try:
         decoded_token = auth.verify_id_token(token.credentials)
+
         uid = decoded_token.get("uid")
         email = decoded_token.get("email")
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid Firebase token")
+
+        print("TOKEN VERIFIED")
+        print("UID:", uid)
+        print("EMAIL:", email)
+
+    except Exception as e:
+        print("TOKEN ERROR:", repr(e))
+        raise HTTPException(
+            status_code=401,
+            detail=f"Invalid Firebase token: {str(e)}"
+        )
 
     stmt = select(models.User).where(models.User.uid == uid)
+
     result = await db.execute(stmt)
     user = result.scalars().first()
 
-    if user:
-        return {"message": "User synchronized", "org_id": str(user.org_id) if user.org_id else None}
+    print("USER FOUND:", user)
 
-    new_user = models.User(
-        uid=uid,
-        email=email,
-        org_id=None
-    )
-    db.add(new_user)
-    await db.commit()
-    
-    return {"message": "Account created", "org_id": None}
+    if user:
+        return {
+            "message": "User synchronized",
+            "org_id": str(user.org_id) if user.org_id else None
+        }
+
+    try:
+        new_user = models.User(
+            uid=uid,
+            email=email,
+            org_id=None
+        )
+
+        db.add(new_user)
+
+        print("ABOUT TO COMMIT")
+
+        await db.commit()
+
+        print("COMMIT SUCCESS")
+
+        return {
+            "message": "Account created",
+            "org_id": None
+        }
+
+    except Exception as e:
+        print("DB ERROR:", repr(e))
+        await db.rollback()
+        raise

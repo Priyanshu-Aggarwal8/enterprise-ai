@@ -1,5 +1,6 @@
 import json
 import redis
+import ssl
 import psycopg
 from dotenv import load_dotenv
 
@@ -14,7 +15,7 @@ from config import settings
 from tool_sandbox import execute_tool_safely
 from tool_approval import request_tool_approval
 
-redis_client = redis.from_url(settings.redis_url)
+redis_client = redis.from_url(settings.redis_url, ssl_cert_reqs=ssl.CERT_NONE)
 sync_db_url = settings.database_url.replace("+asyncpg", "")
 
 
