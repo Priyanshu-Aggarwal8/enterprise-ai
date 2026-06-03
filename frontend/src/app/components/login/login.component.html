@@ -1,154 +1,98 @@
-<div class="login-page min-h-screen w-screen flex flex-col login-bg relative overflow-hidden">
+<div class="login-page login-theme">
+  <div class="login-bg" aria-hidden="true">
+    <div class="login-bg-dot login-bg-dot--accent animate-blob"></div>
+    <div class="login-bg-dot login-bg-dot--purple animate-blob animation-delay-2000"></div>
+    <div class="login-bg-dot login-bg-dot--warning animate-blob animation-delay-4000"></div>
+  </div>
 
-  <!-- Background decorative elements -->
-  <div class="absolute top-0 left-0 w-96 h-96 login-bg-dot login-accent animate-blob"></div>
-  <div class="absolute top-0 right-0 w-96 h-96 login-bg-dot login-purple animate-blob animation-delay-2000"></div>
-  <div class="absolute -bottom-8 left-20 w-96 h-96 login-bg-dot login-warning animate-blob animation-delay-4000"></div>
+  <header class="login-header">
+    <a routerLink="/landing" class="login-header__brand">
+      <app-brand-mark size="lg" variant="full" [showTagline]="true"></app-brand-mark>
+    </a>
 
-  <header class="login-page-header z-10 w-full py-6 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md mx-auto flex items-center justify-between gap-4">
-      <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded-2xl logo-badge flex items-center justify-center font-bold text-sm">
-          AI
-        </div>
-
-        <div>
-          <div class="font-semibold text-lg text-default">
-            Enterprise AI
-          </div>
-          <div class="text-xs muted">
-            Secure multi-agent workspace
-          </div>
-        </div>
-      </div>
-
-      <div class="text-xs muted">
-        Welcome back — secure login.
-      </div>
+    <div class="login-header__actions">
+      <button type="button" (click)="toggleDarkMode()" class="login-header__theme" [title]="darkMode ? 'Switch to light mode' : 'Switch to dark mode'">
+        <svg *ngIf="!darkMode" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zM4.22 5.47a1 1 0 011.42 0L6.8 6.6a1 1 0 11-1.42 1.42L4.22 6.9a1 1 0 010-1.42zM2 10a1 1 0 011-1h1a1 1 0 110 2H3a1 1 0 01-1-1zm13 0a1 1 0 011-1h1a1 1 0 110 2h-1a1 1 0 01-1-1zM4.22 14.53a1 1 0 010-1.42l1.16-1.16a1 1 0 111.42 1.42l-1.16 1.16a1 1 0 01-1.42 0zM10 16a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM14.78 14.53a1 1 0 011.42 0l1.16 1.16a1 1 0 11-1.42 1.42l-1.16-1.16a1 1 0 010-1.42z"/>
+        </svg>
+        <svg *ngIf="darkMode" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-warning" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path d="M17.293 13.293A8 8 0 116.707 2.707a7 7 0 0010.586 10.586z"/>
+        </svg>
+      </button>
+      <a routerLink="/landing" class="login-header__link">Back to Home</a>
     </div>
   </header>
 
-  <main class="flex-1 flex items-center justify-center px-4 pb-10">
-
-    <div class="relative z-10 w-full max-w-md px-4 py-8">
-
-      <div
-        class="login-card backdrop-blur-md p-8 rounded-[30px] shadow-2xl"
-      >
-
-        <!-- Logo & Heading -->
-        <div class="text-center mb-8">
-
-          <div
-            class="mx-auto w-16 h-16 logo-badge rounded-2xl flex items-center justify-center mb-4 shadow-lg transform transition hover:scale-105"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-10 w-10 text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M13 10V3L4 14h7v7l9-11h-7z"
-              />
-            </svg>
-          </div>
-
-          <h1 class="text-4xl brand-title">
-            Enterprise AI
-          </h1>
-
-          <h2 class="text-xl font-semibold text-default mt-2">
-            {{ isRegistering ? 'Create Account' : 'Welcome Back' }}
-          </h2>
-
-          <p class="muted text-sm mt-1">
-            Multi-Agent Platform
-          </p>
-
-        </div>
-
-        <!-- Form -->
-        <form class="space-y-5" (ngSubmit)="onSubmit()">
-
-          <div class="space-y-2">
-            <label class="block text-sm font-medium text-default">
-              Email Address
-            </label>
-
-            <input
-              type="email"
-              [(ngModel)]="email"
-              name="email"
-              autocomplete="email"
-              placeholder="you@example.com"
-              required
-              class="input-field"
-            />
-          </div>
-
-          <div class="space-y-2">
-            <label class="block text-sm font-medium text-default">
-              Password
-            </label>
-
-            <input
-              type="password"
-              [(ngModel)]="password"
-              name="password"
-              autocomplete="current-password"
-              placeholder="••••••••"
-              required
-              class="input-field"
-            />
-          </div>
-
-          <div *ngIf="errorMessage" class="error-box">
-            <p class="text-sm font-medium">
-              {{ errorMessage }}
-            </p>
-          </div>
-
-          <button
-            type="submit"
-            [disabled]="isLoading || !email || !password"
-            class="w-full py-3 px-4 btn-accent btn-elevated font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform"
-          >
-            {{ isLoading ? 'Processing...' : (isRegistering ? 'Create & Setup Organization' : 'Sign In') }}
-          </button>
-
-        </form>
-
-        <!-- Toggle Mode -->
-        <div class="mt-6 text-center">
-
-          <p class="muted text-sm mb-3">
-            {{ isRegistering ? 'Already have an account?' : "Don't have an account?" }}
-          </p>
-
-          <button
-            (click)="toggleMode()"
-            type="button"
-            class="font-semibold link-accent hover:opacity-90 transition-colors outline-none"
-          >
-            {{ isRegistering ? 'Sign In' : 'Create Account' }}
-          </button>
-
-        </div>
-
+  <main class="login-main">
+    <div class="login-card card card-shadow animate-pop">
+      <div class="login-card__head">
+        <span class="login-badge">{{ isRegistering ? 'New account' : 'Sign in' }}</span>
+        <h1 class="login-card__title">{{ isRegistering ? 'Create your account' : 'Welcome back' }}</h1>
+        <p class="login-card__subtitle muted">
+          {{ isRegistering ? 'Register to set up your organization and start building agents.' : 'Sign in to access your workspace, tools, and agents.' }}
+        </p>
       </div>
 
-      <!-- Footer Note -->
-      <div class="text-center mt-6 muted text-xs">
-        <p>🔒 Your data is encrypted end-to-end</p>
-      </div>
+      <form class="login-form" (ngSubmit)="onSubmit()">
+        <div class="login-field">
+          <label for="login-email" class="login-field__label">Email address</label>
+          <input
+            id="login-email"
+            type="email"
+            [(ngModel)]="email"
+            name="email"
+            autocomplete="email"
+            placeholder="you@example.com"
+            required
+            class="input-field"
+          />
+        </div>
 
+        <div class="login-field">
+          <label for="login-password" class="login-field__label">Password</label>
+          <input
+            id="login-password"
+            type="password"
+            [(ngModel)]="password"
+            name="password"
+            [autocomplete]="isRegistering ? 'new-password' : 'current-password'"
+            placeholder="Enter your password"
+            required
+            class="input-field"
+          />
+        </div>
+
+        <div *ngIf="errorMessage" class="error-box" role="alert">
+          {{ errorMessage }}
+        </div>
+
+        <button
+          type="submit"
+          [disabled]="isLoading || !email || !password"
+          class="login-submit btn-elevated w-full"
+        >
+          <span *ngIf="!isLoading">{{ isRegistering ? 'Create & set up organization' : 'Sign in' }}</span>
+          <span *ngIf="isLoading" class="login-submit__loading">
+            <span class="login-submit__spinner" aria-hidden="true"></span>
+            Processing...
+          </span>
+        </button>
+      </form>
+
+      <div class="login-card__footer">
+        <p class="muted text-sm">
+          {{ isRegistering ? 'Already have an account?' : "Don't have an account?" }}
+        </p>
+        <button type="button" (click)="toggleMode()" class="login-toggle">
+          {{ isRegistering ? 'Sign in instead' : 'Create an account' }}
+        </button>
+      </div>
     </div>
 
+    <ul class="login-trust" aria-label="Security highlights">
+      <li class="login-trust__item">BYOK encrypted keys</li>
+      <li class="login-trust__item">Org-scoped tools</li>
+      <li class="login-trust__item">End-to-end secure auth</li>
+    </ul>
   </main>
-
 </div>

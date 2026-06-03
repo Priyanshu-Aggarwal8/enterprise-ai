@@ -1,4 +1,53 @@
-:host {
-  display: block;
-  height: 100%;
+.sandbox-info {
+  background: rgba(88, 101, 242, 0.08);
+  border: 1px solid rgba(88, 101, 242, 0.2);
+}
+
+.sandbox-result {
+  border: 1px solid var(--border-strong);
+  background: var(--bg-panel);
+}
+
+.sandbox-result--pass {
+  border-color: rgba(87, 242, 135, 0.35);
+  background: var(--success-soft);
+}
+
+.sandbox-result--fail {
+  border-color: rgba(237, 66, 69, 0.35);
+  background: var(--danger-soft);
+}
+
+.sandbox-badge {
+  display: inline-flex;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-strong);
+  color: var(--text-secondary);
+}
+
+.sandbox-badge[data-risk='safe'] {
+  color: #2d7a46;
+  border-color: rgba(87, 242, 135, 0.35);
+}
+
+.sandbox-badge[data-risk='sensitive'] {
+  color: #8a6d00;
+  border-color: rgba(254, 231, 92, 0.45);
+}
+
+.sandbox-badge[data-risk='dangerous'],
+.sandbox-badge--fail {
+  color: var(--danger);
+  border-color: rgba(237, 66, 69, 0.35);
+}
+
+.sandbox-badge--approval {
+  color: #3b45b8;
+  border-color: rgba(88, 101, 242, 0.35);
 }

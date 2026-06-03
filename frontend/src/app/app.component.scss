@@ -80,3 +80,13 @@
 .app-header__dropdown {
   border: 1px solid var(--border-strong);
 }
+
+.app-header .brand-mark__text {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .app-header .brand-mark__text {
+    display: flex;
+  }
+}

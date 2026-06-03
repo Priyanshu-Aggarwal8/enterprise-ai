@@ -3,7 +3,7 @@
     <header class="page-header">
       <div>
         <h1 class="page-title">Create Custom Tool</h1>
-        <p class="page-subtitle">Build Python tools shared with everyone in your organization.</p>
+        <p class="page-subtitle">Build Python tools validated in an isolated WASM-style sandbox before they can be used by agents.</p>
       </div>
       <a routerLink="/workspace" class="btn-ghost">← Back to Workspace</a>
     </header>
@@ -13,29 +13,66 @@
         Editing tool: {{ toolName || 'Untitled' }}
       </div>
 
+      <div class="sandbox-info card p-4 rounded-xl">
+        <div class="font-semibold text-default text-sm">Security pipeline</div>
+        <p class="text-xs muted mt-1">
+          Tools are statically analyzed for dangerous imports/calls, then executed in an isolated subprocess with restricted builtins.
+          Sensitive tools require human approval during agent runs.
+        </p>
+      </div>
+
       <div>
         <label class="block text-sm font-semibold text-default mb-2">Tool Name</label>
-        <input type="text" [(ngModel)]="toolName" placeholder="e.g., web_scraper" class="input-field" />
+        <input type="text" [(ngModel)]="toolName" (ngModelChange)="onCodeChange()" placeholder="e.g., summarize_text" class="input-field" />
       </div>
 
       <div>
         <label class="block text-sm font-semibold text-default mb-2">Description</label>
-        <input type="text" [(ngModel)]="toolDescription" placeholder="What does this tool do?" class="input-field" />
+        <input type="text" [(ngModel)]="toolDescription" (ngModelChange)="onCodeChange()" placeholder="What does this tool do?" class="input-field" />
       </div>
 
       <div>
         <label class="block text-sm font-semibold text-default mb-2">Python Code</label>
-        <textarea [(ngModel)]="toolCode" rows="12" class="textarea-field"></textarea>
-        <p class="text-xs muted mt-2">Function must be named <code>run(input_string: str) -> str</code></p>
+        <textarea [(ngModel)]="toolCode" (ngModelChange)="onCodeChange()" rows="12" class="textarea-field"></textarea>
+        <p class="text-xs muted mt-2">Must define <code>run(input_string: str) -> str</code>. Blocked: os, sys, network, file I/O, eval/exec.</p>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-default mb-2">Sandbox test input</label>
+        <input type="text" [(ngModel)]="sandboxTestInput" class="input-field" placeholder="Sample input for sandbox test" />
+      </div>
+
+      <button type="button"
+              (click)="runSandboxTest()"
+              [disabled]="!toolCode.trim() || isSandboxTesting"
+              class="w-full py-3 px-4 btn-secondary font-semibold rounded-lg disabled:opacity-50">
+        {{ isSandboxTesting ? 'Running sandbox test...' : 'Run sandbox security test' }}
+      </button>
+
+      <div *ngIf="sandboxReport" class="sandbox-result rounded-xl p-4"
+           [class.sandbox-result--pass]="sandboxReport.passed"
+           [class.sandbox-result--fail]="!sandboxReport.passed">
+        <div class="flex flex-wrap items-center gap-2 mb-2">
+          <span class="font-semibold text-sm">{{ sandboxReport.passed ? 'Sandbox passed' : 'Sandbox failed' }}</span>
+          <span class="sandbox-badge" [attr.data-risk]="sandboxReport.risk_tier">{{ riskLabel(sandboxReport.risk_tier) }}</span>
+          <span *ngIf="sandboxReport.requires_approval" class="sandbox-badge sandbox-badge--approval">Requires approval at runtime</span>
+        </div>
+        <ul *ngIf="sandboxReport.issues?.length" class="text-xs muted list-disc pl-5 space-y-1">
+          <li *ngFor="let issue of sandboxReport.issues">{{ issue }}</li>
+        </ul>
+        <p *ngIf="sandboxReport.test_output" class="text-xs mt-2"><strong>Output:</strong> {{ sandboxReport.test_output }}</p>
+        <p *ngIf="sandboxReport.test_error" class="text-xs mt-2 text-danger">{{ sandboxReport.test_error }}</p>
       </div>
 
       <div class="flex gap-3">
-        <button (click)="saveTool()" [disabled]="!toolName.trim() || !toolCode.trim() || isSaving"
+        <button (click)="saveTool()"
+                [disabled]="!toolName.trim() || !toolCode.trim() || isSaving || !sandboxPassed"
                 class="flex-1 py-3 px-4 btn-accent font-semibold rounded-lg disabled:opacity-50">
           {{ isSaving ? 'Saving...' : (isEditing ? 'Update Tool' : 'Create Tool') }}
         </button>
         <button *ngIf="isEditing" (click)="resetForm()" class="btn-ghost py-3">Cancel</button>
       </div>
+      <p *ngIf="!sandboxPassed" class="text-xs muted">Run and pass the sandbox test before saving.</p>
     </div>
 
     <div *ngIf="savedTools.length > 0" class="mt-10">
@@ -45,26 +82,28 @@
              class="info-tile flex items-start justify-between gap-4"
              [class.info-tile--active]="isEditing && editingToolId === tool.id">
           <div class="min-w-0">
-            <div class="info-tile__value">{{ tool.name }}</div>
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="info-tile__value">{{ tool.name }}</div>
+              <span class="sandbox-badge" [attr.data-risk]="tool.risk_tier">{{ riskLabel(tool.risk_tier) }}</span>
+              <span class="sandbox-badge" [class.sandbox-badge--fail]="tool.sandbox_status !== 'passed'">
+                {{ tool.sandbox_status === 'passed' ? 'Verified' : 'Unverified' }}
+              </span>
+            </div>
             <div class="info-tile__meta">{{ tool.description }}</div>
+            <div *ngIf="tool.requires_approval" class="info-tile__meta mt-1">Human approval required at runtime</div>
             <div *ngIf="isToolBound(tool)" class="info-tile__meta mt-1 text-danger">
               Bound to: {{ boundAgentLabel(tool) }}
-            </div>
-            <div *ngIf="isToolBound(tool)" class="text-xs muted mt-1">
-              Unbind from all agents before editing or deleting.
             </div>
           </div>
           <div class="flex gap-2 flex-shrink-0">
             <button (click)="editTool(tool)"
                     [disabled]="isToolBound(tool)"
-                    class="px-3 py-1 btn-accent rounded text-sm disabled:opacity-40 disabled:cursor-not-allowed"
-                    [title]="isToolBound(tool) ? 'Unbind from agents first' : 'Edit tool'">
+                    class="px-3 py-1 btn-accent rounded text-sm disabled:opacity-40 disabled:cursor-not-allowed">
               Edit
             </button>
             <button (click)="deleteTool(tool)"
                     [disabled]="isToolBound(tool)"
-                    class="px-3 py-1 btn-danger rounded text-sm disabled:opacity-40 disabled:cursor-not-allowed"
-                    [title]="isToolBound(tool) ? 'Unbind from agents first' : 'Delete tool'">
+                    class="px-3 py-1 btn-danger rounded text-sm disabled:opacity-40 disabled:cursor-not-allowed">
               Delete
             </button>
           </div>

@@ -14,7 +14,30 @@ export interface CustomTool {
   name: string;
   description: string;
   python_code: string;
+  risk_tier?: string;
+  sandbox_status?: string;
+  requires_approval?: boolean;
+  sandbox_report?: string | null;
   bound_agents?: BoundAgentSummary[];
+}
+
+export interface ToolSandboxReport {
+  passed: boolean;
+  risk_tier: string;
+  requires_approval: boolean;
+  issues: string[];
+  test_output?: string | null;
+  test_error?: string | null;
+}
+
+export interface ToolApprovalRequest {
+  approval_id: string;
+  task_id: string;
+  tool_name: string;
+  tool_id: string;
+  risk_tier: string;
+  args_preview: string;
+  message: string;
 }
 
 export interface BoundAgentSummary {
@@ -130,6 +153,26 @@ export class ApiService {
     return this.http.delete(`${this.baseUrl}/tools/${toolId}`);
   }
 
+  sandboxTestTool(
+    name: string,
+    description: string,
+    pythonCode: string,
+    testInput: string = 'sandbox-test'
+  ): Observable<ToolSandboxReport> {
+    return this.http.post<ToolSandboxReport>(`${this.baseUrl}/tools/sandbox-test`, {
+      name,
+      description,
+      python_code: pythonCode,
+      test_input: testInput
+    });
+  }
+
+  respondToolApproval(approvalId: string, approved: boolean): Observable<any> {
+    return this.http.post(`${this.baseUrl}/agents/tool-approvals/${approvalId}`, {
+      approved
+    });
+  }
+
   uploadDocument(orgId?: string, file?: File): Observable<any> {
     const id = orgId || this.getOrgId();
     const formData = new FormData();
@@ -201,5 +244,32 @@ export class ApiService {
       prompt: prompt,
       session_id: sessionId
     });
+  }
+
+  // Saved Chats
+  getSavedChats(orgId?: string): Observable<any[]> {
+    const id = orgId || this.getOrgId();
+    return this.http.get<any[]>(`${this.baseUrl}/chats?org_id=${id}`);
+  }
+
+  saveChat(orgId: string | undefined, title: string, content: string, agentId?: string, sessionId?: string): Observable<any> {
+    const id = orgId || this.getOrgId();
+    return this.http.post<any>(`${this.baseUrl}/chats`, {
+      title,
+      content,
+      agent_id: agentId,
+      session_id: sessionId
+    });
+  }
+
+  updateChat(chatId: string, title: string, content: string): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/chats/${chatId}`, {
+      title,
+      content
+    });
+  }
+
+  deleteChat(chatId: string): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/chats/${chatId}`);
   }
 }

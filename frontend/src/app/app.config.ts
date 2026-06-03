@@ -1,15 +1,24 @@
-import { ApplicationConfig } from '@angular/core';
+import { ApplicationConfig, APP_INITIALIZER, inject } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { authInterceptor } from './services/auth.interceptor'; 
+import { authInterceptor } from './services/auth.interceptor';
+import { ThemeService } from './services/theme.service';
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import { getAuth, provideAuth } from '@angular/fire/auth';
 import { environment } from '../environments/environment';
 
 const providers = [
   provideRouter(routes),
-  provideHttpClient(withInterceptors([authInterceptor]))
+  provideHttpClient(withInterceptors([authInterceptor])),
+  {
+    provide: APP_INITIALIZER,
+    multi: true,
+    useFactory: () => {
+      const theme = inject(ThemeService);
+      return () => theme.initFromStorage();
+    }
+  }
 ];
 
 // Only initialize Firebase if a valid API key is provided in environment.

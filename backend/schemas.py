@@ -33,6 +33,28 @@ class CustomToolCreate(BaseModel):
     description: str
     python_code: str
 
+
+class ToolSandboxTestRequest(BaseModel):
+    name: str = "preview_tool"
+    description: str = ""
+    python_code: str
+    test_input: str = "sandbox-test"
+
+
+class ToolSandboxTestResponse(BaseModel):
+    passed: bool
+    risk_tier: str
+    requires_approval: bool
+    issues: List[str] = []
+    test_output: Optional[str] = None
+    test_error: Optional[str] = None
+    hints: List[str] = []
+
+
+class ToolApprovalDecision(BaseModel):
+    approved: bool
+
+
 class BoundAgentSummary(BaseModel):
     id: UUID
     name: str
@@ -45,6 +67,10 @@ class CustomToolResponse(BaseModel):
     name: str
     description: str
     python_code: str
+    risk_tier: str = "unknown"
+    sandbox_status: str = "pending"
+    requires_approval: bool = False
+    sandbox_report: Optional[str] = None
     bound_agents: List[BoundAgentSummary] = []
 
     model_config = ConfigDict(from_attributes=True)
@@ -70,5 +96,24 @@ class AgentDefinitionResponse(BaseModel):
     model_name: str
     tool_ids: List[UUID] = []
     created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SavedChatCreate(BaseModel):
+    title: str
+    content: str
+    agent_id: Optional[UUID] = None
+    session_id: Optional[str] = None
+
+
+class SavedChatResponse(BaseModel):
+    id: UUID
+    title: str
+    content: str
+    agent_id: Optional[UUID] = None
+    session_id: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

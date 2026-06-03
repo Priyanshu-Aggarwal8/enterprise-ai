@@ -3,11 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs/operators';
-import { ApiService, AgentDefinition, CustomTool } from '../../services/api.service';
+import { ApiService, AgentDefinition, CustomTool, ToolApprovalRequest } from '../../services/api.service';
 import { AgentStreamService } from '../../services/agent-stream.service';
 import { AuthService } from '../../services/auth.service';
+import { BrandMarkComponent } from '../brand-mark/brand-mark.component';
 import { Subscription } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 interface ChatMessage {
   role: 'user' | 'agent' | 'system';
@@ -34,7 +36,7 @@ const RIGHT_DEFAULT = 256;
 @Component({
   selector: 'app-agent-workspace',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, BrandMarkComponent],
   templateUrl: './agent-workspace.component.html',
   styleUrl: './agent-workspace.component.scss'
 })
@@ -46,6 +48,7 @@ export class AgentWorkspaceComponent implements OnInit, OnDestroy {
   documents: any[] = [];
   customTools: CustomTool[] = [];
   agents: AgentDefinition[] = [];
+  savedChats: any[] = [];
 
   documentsPanelOpen = true;
   toolsPanelOpen = true;
@@ -66,6 +69,8 @@ export class AgentWorkspaceComponent implements OnInit, OnDestroy {
   isExecuting: boolean = false;
   chatHistory: ChatMessage[] = [];
   errorMessage: string = '';
+  pendingApproval: ToolApprovalRequest | null = null;
+  isSubmittingApproval = false;
 
   private streamSub!: Subscription;
   private orgIdSub!: Subscription;
@@ -76,6 +81,7 @@ export class AgentWorkspaceComponent implements OnInit, OnDestroy {
     private stream: AgentStreamService,
     private auth: AuthService,
     private router: Router
+    ,private sanitizer: DomSanitizer
   ) {
     this.loadLayout();
   }
@@ -147,6 +153,8 @@ export class AgentWorkspaceComponent implements OnInit, OnDestroy {
             }
           });
 
+          this.loadSavedChats();
+
           this.api.getCustomTools(orgId).subscribe({
             next: (tools) => {
               this.customTools = tools || [];
@@ -181,6 +189,18 @@ export class AgentWorkspaceComponent implements OnInit, OnDestroy {
           this.refreshTools();
         }
       });
+  }
+
+  loadSavedChats(): void {
+    if (!this.orgId) return;
+    this.api.getSavedChats(this.orgId).subscribe({
+      next: (list) => {
+        this.savedChats = list || [];
+      },
+      error: () => {
+        this.savedChats = [];
+      }
+    });
   }
 
   ngOnDestroy() {
@@ -374,6 +394,71 @@ export class AgentWorkspaceComponent implements OnInit, OnDestroy {
     }
   }
 
+  saveCurrentChat(): void {
+    if (!this.orgId) {
+      this.chatHistory.push({ role: 'system', content: 'Cannot save chat: no organization selected.' });
+      return;
+    }
+    const title = prompt('Title for saved chat', `Chat ${new Date().toLocaleString()}`) || `Chat ${new Date().toLocaleString()}`;
+    const payload = JSON.stringify(this.chatHistory);
+    this.api.saveChat(this.orgId, title, payload, this.selectedAgentId || undefined, this.sessionId).subscribe({
+      next: (res) => {
+        this.chatHistory.push({ role: 'system', content: 'Chat saved.' });
+        this.loadSavedChats();
+      },
+      error: (err) => {
+        console.error(err);
+        this.chatHistory.push({ role: 'system', content: 'Failed to save chat.' });
+      }
+    });
+  }
+
+  editSavedChat(chat: any): void {
+    const newTitle = prompt('Edit title', chat.title);
+    if (newTitle === null) return;
+    const newContent = prompt('Edit content (JSON)', chat.content);
+    if (newContent === null) return;
+    this.api.updateChat(chat.id, newTitle, newContent).subscribe({
+      next: () => this.loadSavedChats(),
+      error: () => this.chatHistory.push({ role: 'system', content: 'Failed to update saved chat.' })
+    });
+  }
+
+  deleteSavedChat(chat: any): void {
+    if (!confirm('Delete saved chat?')) return;
+    this.api.deleteChat(chat.id).subscribe({
+      next: () => this.loadSavedChats(),
+      error: () => this.chatHistory.push({ role: 'system', content: 'Failed to delete saved chat.' })
+    });
+  }
+
+  renderMessage(content: string, isStreaming?: boolean): SafeHtml {
+    if (!content) return '' as any;
+    // Escape HTML
+    const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    // Simple markdown-like conversion: headings, lists, code blocks
+    let out = esc(content);
+    // code blocks
+    out = out.replace(/```([\s\S]*?)```/g, (m, p1) => '<pre><code>' + esc(p1) + '</code></pre>');
+    // headings
+    out = out.replace(/^###### (.*)$/gm, '<h6>$1</h6>');
+    out = out.replace(/^##### (.*)$/gm, '<h5>$1</h5>');
+    out = out.replace(/^#### (.*)$/gm, '<h4>$1</h4>');
+    out = out.replace(/^### (.*)$/gm, '<h3>$1</h3>');
+    out = out.replace(/^## (.*)$/gm, '<h2>$1</h2>');
+    out = out.replace(/^# (.*)$/gm, '<h1>$1</h1>');
+    // unordered lists
+    out = out.replace(/(^|\n)- (.*?)(?=\n|$)/g, (m, p1, p2) => '\n<li>' + p2 + '</li>');
+    // wrap consecutive <li> into <ul>
+    out = out.replace(/(?:<li>[\s\S]*?<\/li>\s*)+/g, (m) => '<ul>' + m + '</ul>');
+    // bold **text**
+    out = out.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    // inline code
+    out = out.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+    return this.sanitizer.bypassSecurityTrustHtml(out);
+  }
+
   onFileSelected(event: any) {
     const file: File = event.target.files && event.target.files[0];
     if (!file) return;
@@ -439,14 +524,55 @@ export class AgentWorkspaceComponent implements OnInit, OnDestroy {
       this.updateLatestAgentMessage('Agent initialized. Thinking...');
     } else if (data.status === 'processing') {
       this.updateLatestAgentMessage(`[Thinking] ${data.message}`);
+    } else if (data.status === 'approval_required') {
+      this.pendingApproval = {
+        approval_id: data.approval_id,
+        task_id: data.task_id,
+        tool_name: data.tool_name,
+        tool_id: data.tool_id,
+        risk_tier: data.risk_tier,
+        args_preview: data.args_preview,
+        message: data.message
+      };
+      this.updateLatestAgentMessage(
+        `Waiting for your approval to run "${data.tool_name}" (${data.risk_tier} risk)...`,
+        true
+      );
     } else if (data.status === 'completed') {
+      this.pendingApproval = null;
       this.updateLatestAgentMessage(data.result, false);
       this.isExecuting = false;
       this.stream.disconnect();
     }
   }
 
+  respondToApproval(approved: boolean): void {
+    if (!this.pendingApproval || this.isSubmittingApproval) return;
+
+    this.isSubmittingApproval = true;
+    const approvalId = this.pendingApproval.approval_id;
+    const toolName = this.pendingApproval.tool_name;
+
+    this.api.respondToolApproval(approvalId, approved).subscribe({
+      next: () => {
+        this.isSubmittingApproval = false;
+        this.pendingApproval = null;
+        this.updateLatestAgentMessage(
+          approved
+            ? `Approved "${toolName}". Resuming agent...`
+            : `Denied "${toolName}". Agent will continue without this tool.`,
+          true
+        );
+      },
+      error: () => {
+        this.isSubmittingApproval = false;
+        this.updateLatestAgentMessage('Failed to submit approval. Try again.', true);
+      }
+    });
+  }
+
   private handleStreamError() {
+    this.pendingApproval = null;
     this.updateLatestAgentMessage('Error: WebSocket connection lost.', false);
     this.isExecuting = false;
   }

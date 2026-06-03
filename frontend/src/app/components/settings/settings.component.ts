@@ -2,10 +2,18 @@ import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { ApiService, Organization, CustomTool, Secret } from '../../services/api.service';
+import { ApiService, Organization, Secret } from '../../services/api.service';
 import { ToastService } from '../../services/toast.service';
 import { AuthService } from '../../services/auth.service';
+import { ThemeMode, ThemeService } from '../../services/theme.service';
 import { Subscription } from 'rxjs';
+import { BRAND_NAME } from '../../core/brand';
+
+interface ThemeOption {
+  id: ThemeMode;
+  label: string;
+  description: string;
+}
 
 @Component({
   selector: 'app-settings',
@@ -15,39 +23,44 @@ import { Subscription } from 'rxjs';
   styleUrl: './settings.component.scss'
 })
 export class SettingsComponent implements OnInit, OnDestroy {
-  isOnboarding: boolean = false;
+  readonly brandName = BRAND_NAME;
+  readonly themeOptions: ThemeOption[] = [
+    { id: 'light', label: 'Light', description: 'Bright backgrounds with dark text' },
+    { id: 'dark', label: 'Dark', description: 'Dimmed surfaces for low-light use' },
+    { id: 'system', label: 'System', description: 'Match your device appearance' }
+  ];
+
+  isOnboarding = false;
   organizations: Organization[] = [];
-  
-  newOrgName: string = '';
-  isCreatingOrg: boolean = false;
+  userEmail = '';
 
-  joinOrgId: string = '';
-  isJoiningOrg: boolean = false;
-  joinErrorMessage: string = '';
+  newOrgName = '';
+  isCreatingOrg = false;
 
-  selectedOrgId: string = '';
-  provider: string = 'google';
-  rawApiKey: string = '';
-  isAddingKey: boolean = false;
-  keySuccessMessage: string = '';
-  currentSecrets: Secret[] = []; // To store fetched secrets
-  isEditingSecret: boolean = false;
+  joinOrgId = '';
+  isJoiningOrg = false;
+  joinErrorMessage = '';
+
+  selectedOrgId = '';
+  provider = 'google';
+  rawApiKey = '';
+  isAddingKey = false;
+  keySuccessMessage = '';
+  currentSecrets: Secret[] = [];
+  isEditingSecret = false;
   editingSecretId: string | null = null;
   deletingSecretId: string | null = null;
 
-  customTools: CustomTool[] = [];
-  toolName: string = '';
-  toolDescription: string = '';
-  toolCode: string = 'def run(input_string: str) -> str:\n    """Your custom logic here"""\n    return f"Processed: {input_string}"';
-  isSavingTool: boolean = false;
-  toolSuccessMessage: string = '';
-  isEditingTool: boolean = false;
-  editingToolId: string | null = null;
-  deletingToolId: string | null = null;
+  themeMode: ThemeMode = 'system';
+  compactSidebar = false;
+  streamResponses = true;
 
   private orgIdSub: Subscription | null = null;
+  private userSub: Subscription | null = null;
+  private themeSub: Subscription | null = null;
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private theme = inject(ThemeService);
 
   constructor(
     private api: ApiService,
@@ -55,35 +68,89 @@ export class SettingsComponent implements OnInit, OnDestroy {
     private toast: ToastService
   ) {}
 
-
   ngOnInit(): void {
-    // Check if this is onboarding mode
     this.isOnboarding = this.route.snapshot.data['isOnboarding'] || false;
-    
+    this.themeMode = this.theme.mode;
+    this.loadPreferenceToggles();
     this.loadOrganizations();
-    
-    // Subscribe to org_id changes and update selectedOrgId
-    this.orgIdSub = this.auth.orgId$.subscribe({
-      next: (orgId) => {
-        if (orgId && !this.selectedOrgId) {
-          this.selectedOrgId = orgId;
-          this.onOrgChange();
-        }
+
+    this.themeSub = this.theme.mode$.subscribe(mode => {
+      this.themeMode = mode;
+    });
+
+    this.userSub = this.auth.user$.subscribe(user => {
+      this.userEmail = user?.email ?? '';
+    });
+
+    this.orgIdSub = this.auth.orgId$.subscribe(orgId => {
+      if (orgId && !this.selectedOrgId) {
+        this.selectedOrgId = orgId;
+        this.onOrgChange();
       }
     });
   }
 
   ngOnDestroy(): void {
-    if (this.orgIdSub) {
-      this.orgIdSub.unsubscribe();
+    this.orgIdSub?.unsubscribe();
+    this.userSub?.unsubscribe();
+    this.themeSub?.unsubscribe();
+  }
+
+  get hasOrganization(): boolean {
+    return !!this.selectedOrgId && this.selectedOrgId.length > 0;
+  }
+
+  get selectedOrganizationName(): string {
+    return this.organizations.find(o => o.id === this.selectedOrgId)?.name ?? 'Organization';
+  }
+
+  setTheme(mode: ThemeMode) {
+    this.theme.setMode(mode);
+    this.toast.push(`Theme set to ${mode}`, 'info');
+  }
+
+  onCompactSidebarChange() {
+    try {
+      localStorage.setItem('compactSidebar', String(this.compactSidebar));
+    } catch {
+      // ignore
     }
+    this.toast.push(
+      this.compactSidebar ? 'Compact sidebar preference saved' : 'Standard sidebar preference saved',
+      'info'
+    );
+  }
+
+  onStreamResponsesChange() {
+    try {
+      localStorage.setItem('streamResponses', String(this.streamResponses));
+    } catch {
+      // ignore
+    }
+  }
+
+  copyOrgId() {
+    if (!this.selectedOrgId) {
+      return;
+    }
+    navigator.clipboard.writeText(this.selectedOrgId).then(() => {
+      this.toast.push('Organization ID copied', 'success');
+    }).catch(() => {
+      this.toast.push('Could not copy organization ID', 'error');
+    });
+  }
+
+  logout() {
+    this.auth.logout().subscribe({
+      next: () => this.router.navigate(['/login']),
+      error: () => this.toast.push('Logout failed', 'error')
+    });
   }
 
   loadOrganizations() {
     this.api.getOrganizations().subscribe({
       next: (data) => {
         this.organizations = data;
-        // If user has an org_id from auth, use it; otherwise use first org
         const currentOrgId = this.auth.getOrgId();
         if (currentOrgId && data.find(o => o.id === currentOrgId)) {
           this.selectedOrgId = currentOrgId;
@@ -93,13 +160,11 @@ export class SettingsComponent implements OnInit, OnDestroy {
         if (this.selectedOrgId) {
           this.onOrgChange();
         } else if (!this.isOnboarding) {
-          // If not onboarding and no org selected, redirect to onboarding
           this.router.navigate(['/onboarding']);
         }
       },
       error: (err) => {
         console.error('Failed to load orgs', err);
-        // If not onboarding and failed to load orgs, redirect to onboarding
         if (!this.isOnboarding) {
           this.router.navigate(['/onboarding']);
         }
@@ -108,28 +173,22 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   onOrgChange() {
-    if (!this.selectedOrgId) return;
-    
-    // Update auth service with selected org_id
+    if (!this.selectedOrgId) {
+      return;
+    }
+
     this.auth.setOrgId(this.selectedOrgId);
-    
-    // Load secrets
+
     this.api.getSecrets(this.selectedOrgId).subscribe({
       next: (secrets) => this.currentSecrets = secrets,
       error: (err) => console.error('Failed to load secrets', err)
     });
-
-    // Only load tools if not in onboarding mode
-    if (!this.isOnboarding) {
-      this.api.getCustomTools(this.selectedOrgId).subscribe({
-        next: (tools) => this.customTools = tools,
-        error: (err) => console.error('Failed to load tools', err)
-      });
-    }
   }
 
   createOrganization() {
-    if (!this.newOrgName.trim()) return;
+    if (!this.newOrgName.trim()) {
+      return;
+    }
     this.isCreatingOrg = true;
     this.api.createOrganization(this.newOrgName).subscribe({
       next: (org) => {
@@ -139,22 +198,27 @@ export class SettingsComponent implements OnInit, OnDestroy {
         this.auth.setOrgId(org.id);
         this.loadOrganizations();
         this.toast.push('Organization created', 'success');
-        // In onboarding mode, show API key prompt
         if (this.isOnboarding) {
           setTimeout(() => {
             document.querySelector('.api-key-section')?.scrollIntoView({ behavior: 'smooth' });
           }, 300);
         }
       },
-      error: (err) => { console.error(err); this.isCreatingOrg = false; this.toast.push('Could not create organization', 'error'); }
+      error: (err) => {
+        console.error(err);
+        this.isCreatingOrg = false;
+        this.toast.push('Could not create organization', 'error');
+      }
     });
   }
 
   joinOrganization() {
-    if (!this.joinOrgId.trim()) return;
+    if (!this.joinOrgId.trim()) {
+      return;
+    }
     this.isJoiningOrg = true;
     this.joinErrorMessage = '';
-    
+
     this.api.joinOrganization(this.joinOrgId).subscribe({
       next: () => {
         const orgId = this.joinOrgId;
@@ -163,7 +227,6 @@ export class SettingsComponent implements OnInit, OnDestroy {
         this.selectedOrgId = orgId;
         this.auth.setOrgId(orgId);
         this.loadOrganizations();
-        // In onboarding mode, show API key prompt
         if (this.isOnboarding) {
           setTimeout(() => {
             document.querySelector('.api-key-section')?.scrollIntoView({ behavior: 'smooth' });
@@ -178,7 +241,6 @@ export class SettingsComponent implements OnInit, OnDestroy {
     });
   }
 
-  // API Key Management
   startAddSecret() {
     this.isEditingSecret = false;
     this.editingSecretId = null;
@@ -190,12 +252,14 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.isEditingSecret = true;
     this.editingSecretId = secret.id;
     this.provider = secret.provider;
-    this.rawApiKey = ''; // Never populate raw key
+    this.rawApiKey = '';
     this.keySuccessMessage = '';
   }
 
   saveSecret() {
-    if (!this.selectedOrgId || !this.rawApiKey.trim()) return;
+    if (!this.selectedOrgId || !this.rawApiKey.trim()) {
+      return;
+    }
     this.isAddingKey = true;
     this.keySuccessMessage = '';
 
@@ -205,7 +269,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
           this.rawApiKey = '';
           this.isAddingKey = false;
           this.keySuccessMessage = `✅ Key updated. Preview: ${res.key_preview}`;
-          this.onOrgChange(); // Reload secrets
+          this.onOrgChange();
           this.isEditingSecret = false;
           this.editingSecretId = null;
           this.toast.push('API key updated', 'success');
@@ -223,10 +287,9 @@ export class SettingsComponent implements OnInit, OnDestroy {
           this.rawApiKey = '';
           this.isAddingKey = false;
           this.keySuccessMessage = `✅ Key securely encrypted and stored. Preview: ${res.key_preview}`;
-          this.onOrgChange(); // Reload secrets
+          this.onOrgChange();
           this.toast.push('API key saved', 'success');
-          
-          // If onboarding, redirect to workspace after a delay
+
           if (this.isOnboarding) {
             setTimeout(() => {
               this.router.navigate(['/workspace']);
@@ -243,23 +306,23 @@ export class SettingsComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Backwards-compatible wrapper for template
   addApiKey() {
     this.saveSecret();
   }
 
   deleteSecret(secretId: string) {
-    // show confirmation first
     this.deletingSecretId = secretId;
   }
 
   confirmDeleteSecret() {
-    if (!this.selectedOrgId || !this.deletingSecretId) return;
+    if (!this.selectedOrgId || !this.deletingSecretId) {
+      return;
+    }
     this.api.deleteSecret(this.selectedOrgId, this.deletingSecretId).subscribe({
       next: () => {
         this.keySuccessMessage = '✅ API Key deleted successfully.';
         this.deletingSecretId = null;
-        this.onOrgChange(); // Reload secrets
+        this.onOrgChange();
         this.toast.push('API key deleted', 'success');
       },
       error: (err) => {
@@ -275,105 +338,14 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.deletingSecretId = null;
   }
 
-  // Custom Tool Management
-  startAddTool() {
-    this.isEditingTool = false;
-    this.editingToolId = null;
-    this.toolName = '';
-    this.toolDescription = '';
-    this.toolCode = 'def run(input_string: str) -> str:\n    """Your custom logic here"""\n    return f"Processed: {input_string}"';
-    this.toolSuccessMessage = '';
-  }
-
-  editTool(tool: CustomTool) {
-    this.isEditingTool = true;
-    this.editingToolId = tool.id;
-    this.toolName = tool.name;
-    this.toolDescription = tool.description;
-    this.toolCode = tool.python_code;
-    this.toolSuccessMessage = '';
-  }
-
-  saveCustomTool() {
-    if (!this.selectedOrgId || !this.toolName.trim() || !this.toolCode.trim()) return;
-    this.isSavingTool = true;
-    this.toolSuccessMessage = '';
-
-    if (this.isEditingTool && this.editingToolId) {
-      this.api.updateCustomTool(this.editingToolId, this.toolName, this.toolDescription, this.toolCode).subscribe({
-        next: (tool) => {
-          this.isSavingTool = false;
-          this.toolSuccessMessage = `✅ Tool '${tool.name}' updated successfully!`;
-          this.toolName = '';
-          this.toolDescription = '';
-          this.toolCode = 'def run(input_string: str) -> str:\n    return f"Processed: {input_string}"';
-          this.onOrgChange(); // Reload tools
-          this.isEditingTool = false;
-          this.editingToolId = null;
-          this.toast.push(`Tool '${tool.name}' updated`, 'success');
-        },
-        error: (err) => {
-          console.error(err);
-          this.isSavingTool = false;
-          this.toolSuccessMessage = 'Error updating tool.';
-          this.toast.push('Error updating tool', 'error');
-        }
-      });
-    } else {
-      this.api.createCustomTool(this.selectedOrgId, this.toolName, this.toolDescription, this.toolCode).subscribe({
-        next: (tool) => {
-          this.isSavingTool = false;
-          this.toolSuccessMessage = `✅ Tool '${tool.name}' saved successfully!`;
-          this.toolName = '';
-          this.toolDescription = '';
-          this.toolCode = 'def run(input_string: str) -> str:\n    return f"Processed: {input_string}"';
-          this.onOrgChange(); // Reload tools
-          this.toast.push(`Tool '${tool.name}' created`, 'success');
-        },
-        error: (err) => {
-          console.error(err);
-          this.isSavingTool = false;
-          this.toolSuccessMessage = 'Error saving tool.';
-          this.toast.push('Error saving tool', 'error');
-        }
-      });
+  private loadPreferenceToggles() {
+    try {
+      this.compactSidebar = localStorage.getItem('compactSidebar') === 'true';
+      const stream = localStorage.getItem('streamResponses');
+      this.streamResponses = stream !== 'false';
+    } catch {
+      this.compactSidebar = false;
+      this.streamResponses = true;
     }
-  }
-
-  deleteCustomTool(toolId: string) {
-    // show confirmation modal
-    this.deletingToolId = toolId;
-  }
-
-  confirmDeleteTool() {
-    if (!this.deletingToolId) return;
-    this.api.deleteCustomTool(this.deletingToolId).subscribe({
-      next: () => {
-        this.toolSuccessMessage = '✅ Custom Tool deleted successfully.';
-        this.deletingToolId = null;
-        this.onOrgChange(); // Reload tools
-        this.toast.push('Tool deleted', 'success');
-      },
-      error: (err) => {
-        console.error(err);
-        this.toolSuccessMessage = 'Error: Could not delete custom tool.';
-        this.deletingToolId = null;
-        this.toast.push('Error deleting tool', 'error');
-      }
-    });
-  }
-
-  cancelDeleteTool() {
-    this.deletingToolId = null;
-  }
-
-  completeOnboarding() {
-    if (this.selectedOrgId) {
-      this.router.navigate(['/workspace']);
-    }
-  }
-
-  get hasOrganization(): boolean {
-    return !!this.selectedOrgId && this.selectedOrgId.length > 0;
   }
 }

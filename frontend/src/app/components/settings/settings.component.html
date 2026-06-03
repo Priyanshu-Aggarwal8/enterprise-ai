@@ -1,144 +1,227 @@
 <div class="h-full min-h-screen w-full flex flex-col bg-app">
-  <!-- Header is provided by global app component. Removed duplicate here. -->
-
-  <!-- Main Content -->
   <main class="flex-1 overflow-y-auto page-shell">
-    <div class="page-container max-w-4xl">
-      
+    <div class="page-container max-w-4xl settings-page">
+
       <!-- Onboarding Mode -->
       <div *ngIf="isOnboarding && !hasOrganization" class="space-y-8">
-        
-        <!-- Progress Indicator -->
         <div class="flex items-center gap-4 mb-12">
-          <div class="flex items-center justify-center w-10 h-10 rounded-full" style="background:var(--accent); color:white;">1</div>
-          <div class="h-1 flex-1" style="background:linear-gradient(90deg,var(--accent),var(--accent-600)); opacity:.12"></div>
-          <div class="flex items-center justify-center w-10 h-10 rounded-full bg-panel muted font-bold text-sm">2</div>
-          <div class="h-1 flex-1 bg-panel" style="opacity:.6"></div>
-          <div class="flex items-center justify-center w-10 h-10 rounded-full bg-panel muted font-bold text-sm">3</div>
+          <div class="settings-step settings-step--active">1</div>
+          <div class="settings-step-line"></div>
+          <div class="settings-step">2</div>
+          <div class="settings-step-line settings-step-line--muted"></div>
+          <div class="settings-step settings-step--muted">3</div>
         </div>
 
         <div>
-          <h2 class="text-4xl font-bold text-default mb-2">Welcome to Enterprise AI Platform</h2>
+          <h2 class="text-4xl font-bold text-default mb-2">Welcome to {{ brandName }}</h2>
           <p class="text-xl muted">Let's set up your organization workspace</p>
         </div>
 
-        <!-- Organization Selection -->
         <div class="card p-8 rounded-2xl">
           <h3 class="text-2xl font-bold text-default mb-2">Step 1: Choose Your Organization</h3>
           <p class="muted mb-8">Join an existing team or create a new workspace. This decision is permanent.</p>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6 divide-y md:divide-y-0 md:divide-x divide-theme">
-            
-            <!-- Create Organization -->
             <div class="pb-8 md:pb-0 md:pr-8 flex flex-col">
               <div class="flex items-center gap-3 mb-4">
-                <div class="w-10 h-10 rounded-lg" style="background:var(--surface); color:var(--accent); display:flex; align-items:center; justify-content:center;">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v2h8v-2zM16 11a2 2 0 10-4 0v2h4v-2z" /></svg>
-                </div>
+                <div class="settings-section__icon">+</div>
                 <h4 class="text-lg font-semibold text-default">Create New</h4>
               </div>
               <p class="text-sm muted mb-6">Start a brand new organization. You'll be the owner and can invite team members.</p>
-              
-              <input type="text" 
-                     [(ngModel)]="newOrgName" 
-                     placeholder="e.g., Wayne Enterprises" 
-                     class="input-field" />
-              
-                    <button (click)="createOrganization()" 
+              <input type="text" [(ngModel)]="newOrgName" placeholder="e.g., Acme Labs" class="input-field" />
+              <button (click)="createOrganization()"
                       [disabled]="!newOrgName.trim() || isCreatingOrg"
-                      class="w-full py-3 px-4 btn-accent font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg">
-                {{ isCreatingOrg ? 'Creating...' : '✨ Create Organization' }}
+                      class="w-full py-3 px-4 btn-accent font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg mt-4">
+                {{ isCreatingOrg ? 'Creating...' : 'Create Organization' }}
               </button>
             </div>
 
-            <!-- Join Organization -->
             <div class="pt-8 md:pt-0 md:pl-8 flex flex-col">
               <div class="flex items-center gap-3 mb-4">
-                <div class="w-10 h-10 rounded-lg" style="background:var(--surface); color:var(--accent); display:flex; align-items:center; justify-content:center;">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path d="M12 6a4 4 0 110-8 4 4 0 010 8zM16 11h-3.5a6.5 6.5 0 00-6 3.666V16a1 1 0 001 1h12a1 1 0 001-1v-1.334A6.5 6.5 0 0016 11z" /></svg>
-                </div>
+                <div class="settings-section__icon">↗</div>
                 <h4 class="text-lg font-semibold text-default">Join Existing</h4>
               </div>
               <p class="text-sm muted mb-6">Join an existing organization using the workspace ID shared by your team administrator.</p>
-              
-              <input type="text" 
-                     [(ngModel)]="joinOrgId" 
-                     placeholder="e.g., 550e8400-e29b..." 
-                     class="input-field font-mono text-sm" />
-              
-              <div *ngIf="joinErrorMessage" class="alert-danger text-sm mb-3 p-3 rounded-lg">
+              <input type="text" [(ngModel)]="joinOrgId" placeholder="e.g., 550e8400-e29b..." class="input-field font-mono text-sm" />
+              <div *ngIf="joinErrorMessage" class="alert-danger text-sm mb-3 p-3 rounded-lg mt-3">
                 {{ joinErrorMessage }}
               </div>
-              
-              <button (click)="joinOrganization()" 
+              <button (click)="joinOrganization()"
                       [disabled]="!joinOrgId.trim() || isJoiningOrg"
-                      class="w-full py-3 px-4 btn-accent font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg">
-                {{ isJoiningOrg ? 'Joining...' : '🔗 Join Organization' }}
+                      class="w-full py-3 px-4 btn-accent font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg mt-4">
+                {{ isJoiningOrg ? 'Joining...' : 'Join Organization' }}
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- API Key Setup (Onboarding or Regular) -->
-      <div *ngIf="(isOnboarding && hasOrganization) || (!isOnboarding && hasOrganization)" class="space-y-8">
-        
-        <!-- Onboarding: Progress -->
-        <div *ngIf="isOnboarding" class="flex items-center gap-4 mb-12">
-          <div class="flex items-center justify-center w-10 h-10 rounded-full" style="background:var(--accent); color:white;">✓</div>
-          <div class="h-1 flex-1" style="background:linear-gradient(90deg,var(--accent),var(--accent-600)); opacity:.12"></div>
-          <div class="flex items-center justify-center w-10 h-10 rounded-full" style="background:var(--accent); color:white;">2</div>
-          <div class="h-1 flex-1 bg-panel" style="opacity:.6"></div>
-          <div class="flex items-center justify-center w-10 h-10 rounded-full bg-panel muted font-bold text-sm">3</div>
+      <!-- Regular settings + onboarding step 2 -->
+      <div *ngIf="(isOnboarding && hasOrganization) || (!isOnboarding && hasOrganization)" class="space-y-6">
+
+        <header *ngIf="!isOnboarding" class="page-header">
+          <h1 class="page-title">Settings</h1>
+          <p class="page-subtitle">Manage appearance, account preferences, and organization configuration.</p>
+        </header>
+
+        <div *ngIf="isOnboarding" class="flex items-center gap-4 mb-4">
+          <div class="settings-step settings-step--done">✓</div>
+          <div class="settings-step-line"></div>
+          <div class="settings-step settings-step--active">2</div>
+          <div class="settings-step-line settings-step-line--muted"></div>
+          <div class="settings-step settings-step--muted">3</div>
         </div>
 
-        <!-- API Key Section -->
-        <div class="api-key-section card p-8 rounded-2xl">
-          <div class="flex items-center gap-3 mb-2">
-            <div class="w-10 h-10 rounded-lg" style="background:var(--success-soft); color:var(--success); display:flex; align-items:center; justify-content:center;">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" /></svg>
+        <!-- Appearance -->
+        <section *ngIf="!isOnboarding" class="settings-section card p-8 rounded-2xl">
+          <div class="settings-section__head">
+            <div class="settings-section__icon settings-section__icon--accent">◐</div>
+            <div>
+              <h3 class="settings-section__title">Appearance</h3>
+              <p class="settings-section__desc muted">Choose how {{ brandName }} looks on your device.</p>
             </div>
-            <h3 class="text-2xl font-bold text-default">
-              {{ isOnboarding ? 'Step 2: Add Your API Key' : 'Manage API Keys (BYOK)' }}
-            </h3>
           </div>
-          <p class="muted mb-8">
-            {{ isOnboarding ? 'Provide your own LLM API key. Keys are immediately encrypted with AES-256.' : 'Securely store your LLM provider keys. All keys are encrypted end-to-end.' }}
-          </p>
+
+          <div class="theme-picker">
+            <button *ngFor="let option of themeOptions"
+                    type="button"
+                    class="theme-picker__option"
+                    [class.theme-picker__option--active]="themeMode === option.id"
+                    (click)="setTheme(option.id)">
+              <span class="theme-picker__label">{{ option.label }}</span>
+              <span class="theme-picker__desc">{{ option.description }}</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Workspace preferences -->
+        <section *ngIf="!isOnboarding" class="settings-section card p-8 rounded-2xl">
+          <div class="settings-section__head">
+            <div class="settings-section__icon settings-section__icon--accent">⚙</div>
+            <div>
+              <h3 class="settings-section__title">Workspace</h3>
+              <p class="settings-section__desc muted">Tune how the workspace behaves for you.</p>
+            </div>
+          </div>
+
+          <div class="settings-toggle-list">
+            <label class="settings-toggle">
+              <div>
+                <div class="settings-toggle__label">Stream agent responses</div>
+                <div class="settings-toggle__hint muted">Show tokens as they arrive in chat</div>
+              </div>
+              <input type="checkbox" [(ngModel)]="streamResponses" (ngModelChange)="onStreamResponsesChange()" />
+            </label>
+
+            <label class="settings-toggle">
+              <div>
+                <div class="settings-toggle__label">Compact sidebar panels</div>
+                <div class="settings-toggle__hint muted">Prefer narrower tool and agent sidebars</div>
+              </div>
+              <input type="checkbox" [(ngModel)]="compactSidebar" (ngModelChange)="onCompactSidebarChange()" />
+            </label>
+          </div>
+        </section>
+
+        <!-- Account -->
+        <section *ngIf="!isOnboarding" class="settings-section card p-8 rounded-2xl">
+          <div class="settings-section__head">
+            <div class="settings-section__icon settings-section__icon--accent">👤</div>
+            <div>
+              <h3 class="settings-section__title">Account</h3>
+              <p class="settings-section__desc muted">Profile details and quick navigation.</p>
+            </div>
+          </div>
+
+          <div class="info-tile mb-4">
+            <div class="info-tile__label">Signed in as</div>
+            <div class="info-tile__value">{{ userEmail || '—' }}</div>
+          </div>
+
+          <div class="settings-link-grid">
+            <a routerLink="/profile" class="settings-link-card">Open Profile</a>
+            <a routerLink="/workspace" class="settings-link-card">Open Workspace</a>
+            <a routerLink="/documents" class="settings-link-card">Documents</a>
+            <a routerLink="/tools/create" class="settings-link-card">Tool Builder</a>
+            <a routerLink="/agents/create" class="settings-link-card">Agent Builder</a>
+          </div>
+
+          <button type="button" (click)="logout()" class="settings-logout-btn mt-4">Sign out</button>
+        </section>
+
+        <!-- Organization -->
+        <section *ngIf="!isOnboarding" class="settings-section card p-8 rounded-2xl">
+          <div class="settings-section__head">
+            <div class="settings-section__icon settings-section__icon--accent">🏢</div>
+            <div>
+              <h3 class="settings-section__title">Organization</h3>
+              <p class="settings-section__desc muted">Your active workspace and organization ID.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 gap-4">
+            <div class="info-tile">
+              <div class="info-tile__label">Organization name</div>
+              <div class="info-tile__value">{{ selectedOrganizationName }}</div>
+            </div>
+
+            <div class="info-tile">
+              <div class="info-tile__label">Organization ID</div>
+              <div class="info-tile__value font-mono text-sm break-all">{{ selectedOrgId }}</div>
+              <button type="button" (click)="copyOrgId()" class="px-3 py-1 btn-accent rounded text-sm mt-3">Copy ID</button>
+            </div>
+
+            <div *ngIf="organizations.length > 1">
+              <label class="block text-sm font-semibold text-default mb-2">Switch organization</label>
+              <select [(ngModel)]="selectedOrgId" (ngModelChange)="onOrgChange()" class="select-field">
+                <option *ngFor="let org of organizations" [value]="org.id">{{ org.name }}</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <!-- API Keys -->
+        <section class="settings-section api-key-section card p-8 rounded-2xl">
+          <div class="settings-section__head">
+            <div class="settings-section__icon settings-section__icon--success">🔐</div>
+            <div>
+              <h3 class="settings-section__title">
+                {{ isOnboarding ? 'Step 2: Add Your API Key' : 'API Keys (BYOK)' }}
+              </h3>
+              <p class="settings-section__desc muted">
+                {{ isOnboarding ? 'Provide your own LLM API key. Keys are encrypted with AES-256.' : 'Securely store LLM provider keys for your organization.' }}
+              </p>
+            </div>
+          </div>
 
           <div class="flex flex-col gap-4">
             <div>
               <label class="block text-sm font-semibold text-default mb-2">AI Provider</label>
-              <select [(ngModel)]="provider" 
-                      class="select-field text-sm cursor-not-allowed opacity-80" 
-                      disabled>
+              <select [(ngModel)]="provider" class="select-field text-sm cursor-not-allowed opacity-80" disabled>
                 <option value="google">Google Gemini API</option>
               </select>
-              <p class="text-xs muted mt-2">Get your key from <a href="https://ai.google.dev" target="_blank" class="link-accent hover:text-default">ai.google.dev</a></p>
+              <p class="text-xs muted mt-2">Get your key from <a href="https://ai.google.dev" target="_blank" rel="noopener" class="link-accent">ai.google.dev</a></p>
             </div>
 
             <div>
               <label class="block text-sm font-semibold text-default mb-2">API Key</label>
-              <input type="password" 
-                     [(ngModel)]="rawApiKey" 
-                     placeholder="AIzaSy..." 
-                     class="input-field text-sm font-mono">
-              <p class="text-xs muted mt-2">🔒 Your key will be encrypted immediately and never logged</p>
+              <input type="password" [(ngModel)]="rawApiKey" placeholder="AIzaSy..." class="input-field text-sm font-mono">
+              <p class="text-xs muted mt-2">Your key is encrypted immediately and never logged.</p>
             </div>
 
-                <button (click)="addApiKey()" 
-                  [disabled]="!rawApiKey.trim() || isAddingKey || !selectedOrgId"
-                  class="w-full py-3 px-4 btn-accent font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg">
-              {{ isAddingKey ? 'Encrypting...' : '🔐 Encrypt & Save Key' }}
+            <button (click)="addApiKey()"
+                    [disabled]="!rawApiKey.trim() || isAddingKey || !selectedOrgId"
+                    class="w-full py-3 px-4 btn-accent font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg">
+              {{ isAddingKey ? 'Encrypting...' : (isEditingSecret ? 'Update Key' : 'Encrypt & Save Key') }}
             </button>
 
-              <div *ngIf="keySuccessMessage" 
-                class="p-4 rounded-lg text-sm font-medium" [ngClass]="keySuccessMessage.includes('✅') ? 'alert-success' : 'alert-danger'">
+            <div *ngIf="keySuccessMessage"
+                 class="p-4 rounded-lg text-sm font-medium"
+                 [ngClass]="keySuccessMessage.includes('✅') ? 'alert-success' : 'alert-danger'">
               {{ keySuccessMessage }}
             </div>
 
-            <!-- Existing Secrets -->
-            <div *ngIf="currentSecrets && currentSecrets.length > 0" class="mt-4">
+            <div *ngIf="currentSecrets && currentSecrets.length > 0" class="mt-2">
               <h4 class="text-sm font-semibold text-default mb-2">Saved Keys</h4>
               <div class="space-y-3">
                 <div *ngFor="let s of currentSecrets" class="info-tile flex items-center justify-between gap-3">
@@ -154,9 +237,9 @@
               </div>
             </div>
           </div>
-          <!-- Secret delete confirmation -->
+
           <div *ngIf="deletingSecretId" class="mt-4 p-4 alert-danger rounded-lg">
-            <div class="flex items-center justify-between">
+            <div class="flex flex-wrap items-center justify-between gap-3">
               <div class="text-sm text-danger">Are you sure you want to delete this API key?</div>
               <div class="flex items-center gap-2">
                 <button (click)="confirmDeleteSecret()" class="px-3 py-1 btn-danger rounded">Yes, delete</button>
@@ -164,22 +247,8 @@
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        <!-- Custom Tools (link to dedicated page) -->
-        <div *ngIf="!isOnboarding" class="card p-8 rounded-2xl">
-          <div class="flex items-center gap-3 mb-2">
-            <div class="w-10 h-10 rounded-lg alert-purple flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path d="M5.5 13a3.5 3.5 0 01-.369-6.98 4 4 0 117.753-1.3A4.5 4.5 0 1113.5 13H11V9.413l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13H5.5z" /></svg>
-            </div>
-            <h3 class="text-2xl font-bold text-default">Custom Tools</h3>
-          </div>
-          <p class="muted mb-6">Tools are shared across your organization. Create and manage them from the dedicated tools page or workspace.</p>
-          <a routerLink="/tools/create" class="inline-block py-3 px-6 btn-accent font-semibold rounded-lg">Open Tool Builder</a>
-          <p *ngIf="customTools.length > 0" class="text-sm muted mt-4">{{ customTools.length }} tool(s) configured for this organization.</p>
-        </div>
-
-        <!-- Onboarding: Complete Button -->
         <div *ngIf="isOnboarding && keySuccessMessage.includes('✅')" class="text-center py-8">
           <p class="muted mb-4">Your organization is ready! Redirecting to workspace...</p>
           <div class="inline-flex items-center gap-2 px-6 py-3 btn-success rounded-lg font-semibold shadow-lg">

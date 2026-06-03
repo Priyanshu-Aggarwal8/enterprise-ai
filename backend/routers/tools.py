@@ -1,3 +1,5 @@
+import json
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -6,8 +8,13 @@ import models
 import schemas
 from security import require_organization
 from agent_tool_bindings import get_bound_agents_for_tool, ensure_tool_is_unbound
+from tool_sandbox import validate_tool_for_save
 
 router = APIRouter(prefix="/tools", tags=["Custom Tools"])
+
+
+def _tool_requires_approval(tool: models.CustomTool) -> bool:
+    return str(tool.requires_approval).lower() in {"true", "1", "yes"}
 
 
 def _tool_to_response(tool: models.CustomTool, bound_agents: list[models.AgentDefinition]) -> schemas.CustomToolResponse:
@@ -16,9 +23,41 @@ def _tool_to_response(tool: models.CustomTool, bound_agents: list[models.AgentDe
         name=tool.name,
         description=tool.description,
         python_code=tool.python_code,
+        risk_tier=tool.risk_tier or "unknown",
+        sandbox_status=tool.sandbox_status or "pending",
+        requires_approval=_tool_requires_approval(tool),
+        sandbox_report=tool.sandbox_report,
         bound_agents=[
             schemas.BoundAgentSummary(id=a.id, name=a.name) for a in bound_agents
         ],
+    )
+
+
+def _apply_sandbox_metadata(tool: models.CustomTool, report) -> None:
+    tool.risk_tier = report.risk_tier
+    tool.sandbox_status = "passed" if report.passed else "failed"
+    tool.sandbox_report = json.dumps(report.to_dict())
+    tool.requires_approval = "true" if report.requires_approval else "false"
+
+
+@router.post("/sandbox-test", response_model=schemas.ToolSandboxTestResponse)
+async def sandbox_test_tool(
+    payload: schemas.ToolSandboxTestRequest,
+    current_user: models.User = Depends(require_organization),
+):
+    report = validate_tool_for_save(
+        payload.python_code,
+        payload.description,
+        payload.test_input,
+    )
+    return schemas.ToolSandboxTestResponse(
+        passed=report.passed,
+        risk_tier=report.risk_tier,
+        requires_approval=report.requires_approval,
+        issues=report.issues,
+        test_output=report.test_output,
+        test_error=report.test_error,
+        hints=report.hints,
     )
 
 
@@ -28,12 +67,23 @@ async def create_custom_tool(
     current_user: models.User = Depends(require_organization),
     db: AsyncSession = Depends(get_db),
 ):
+    report = validate_tool_for_save(tool.python_code, tool.description)
+    if not report.passed:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "message": "Tool failed sandbox validation. Fix issues and run sandbox test.",
+                "sandbox": report.to_dict(),
+            },
+        )
+
     db_tool = models.CustomTool(
         org_id=current_user.org_id,
         name=tool.name.replace(" ", "_").lower(),
         description=tool.description,
         python_code=tool.python_code,
     )
+    _apply_sandbox_metadata(db_tool, report)
     db.add(db_tool)
     await db.commit()
     await db.refresh(db_tool)
@@ -74,9 +124,20 @@ async def update_custom_tool(
 
     await ensure_tool_is_unbound(db, tool.id, current_user.org_id, action="update")
 
+    report = validate_tool_for_save(tool_data.python_code, tool_data.description)
+    if not report.passed:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "message": "Tool failed sandbox validation. Fix issues and run sandbox test.",
+                "sandbox": report.to_dict(),
+            },
+        )
+
     tool.name = tool_data.name.replace(" ", "_").lower()
     tool.description = tool_data.description
     tool.python_code = tool_data.python_code
+    _apply_sandbox_metadata(tool, report)
 
     await db.commit()
     await db.refresh(tool)

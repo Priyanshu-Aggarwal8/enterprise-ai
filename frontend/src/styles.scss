@@ -261,13 +261,34 @@ html, body {
 a.btn-accent {
   text-decoration: none;
   display: inline-block;
+  color: #ffffff !important;
 }
+
+/* Primary accent CTAs in light mode — dark text on soft fill (Send, Open Tool Builder, etc.) */
+html:not(.dark) button.btn-accent:not(.text-sm):not(.btn-elevated),
+html:not(.dark) a.btn-accent:not(.text-sm),
+html:not(.dark) .send-btn {
+  color: #3b45b8 !important;
+  background-color: rgba(88, 101, 242, 0.18) !important;
+  background-image: none !important;
+  border: 1px solid rgba(88, 101, 242, 0.55) !important;
+  box-shadow: none !important;
+  filter: none;
+}
+
+html:not(.dark) button.btn-accent:not(.text-sm):not(.btn-elevated):hover:not(:disabled),
+html:not(.dark) a.btn-accent:not(.text-sm):hover,
+html:not(.dark) .send-btn:hover:not(:disabled) {
+  color: #2f3690 !important;
+  background-color: rgba(88, 101, 242, 0.26) !important;
+}
+
+/* Compact accent buttons (Edit, Replace, etc.) — soft fill + dark text in light mode */
 button.btn-accent,
 label.btn-accent {
   color: #ffffff !important;
 }
 
-/* Compact accent buttons (Edit, Replace, etc.) — soft fill + dark text in light mode */
 html:not(.dark) button.btn-accent.text-sm,
 html:not(.dark) label.btn-accent.text-sm {
   color: #3b45b8 !important;
@@ -282,6 +303,29 @@ html:not(.dark) label.btn-accent.text-sm:hover:not(:disabled) {
   background-color: rgba(88, 101, 242, 0.22) !important;
   filter: none;
 }
+
+/* Login submit — explicit light/dark (beats Tailwind button reset) */
+html:not(.dark) .login-submit {
+  color: #3b45b8 !important;
+  background-color: rgba(88, 101, 242, 0.18) !important;
+  background-image: none !important;
+  border: 1px solid rgba(88, 101, 242, 0.55) !important;
+  box-shadow: none !important;
+}
+
+html:not(.dark) .login-submit:hover:not(:disabled) {
+  color: #2f3690 !important;
+  background-color: rgba(88, 101, 242, 0.26) !important;
+}
+
+.dark .login-submit {
+  color: #ffffff !important;
+  background-color: var(--accent) !important;
+  background-image: linear-gradient(90deg, var(--accent), var(--accent-600)) !important;
+  border: none !important;
+  box-shadow: 0 14px 40px rgba(88, 101, 242, 0.14);
+}
+
 .btn-secondary { background: transparent; color: var(--text); border: 1px solid var(--card-contrast); }
 .btn-secondary:hover { background: var(--panel); }
 .btn-success { background: var(--success); color: black; }
@@ -304,48 +348,6 @@ html:not(.dark) label.btn-accent.text-sm:hover:not(:disabled) {
 }
 .header-link:hover { opacity: 1; }
 .header-button { color: var(--text); transition: color .2s ease, background-color .2s ease, opacity .2s ease; }
-
-.login-card {
-  background: var(--bg-panel) !important;
-  border: 1px solid var(--border-strong) !important;
-  box-shadow: var(--shadow-card);
-}
-
-.login-page {
-  color: var(--text-primary);
-  background-color: var(--bg);
-}
-
-.login-bg {
-  min-height: 100vh;
-  background-color: var(--bg);
-  background-image:
-    radial-gradient(circle at top left, rgba(88, 101, 242, 0.14), transparent 24%),
-    radial-gradient(circle at top right, rgba(124, 58, 237, 0.12), transparent 20%),
-    radial-gradient(circle at bottom left, rgba(254, 231, 92, 0.1), transparent 26%),
-    linear-gradient(180deg, var(--bg), transparent);
-}
-
-.login-page-header {
-  border-bottom: 1px solid var(--border-strong);
-  background: linear-gradient(180deg, rgba(88, 101, 242, 0.06), transparent);
-}
-
-.dark .login-bg {
-  background-image:
-    radial-gradient(circle at top left, rgba(88, 101, 242, 0.18), transparent 28%),
-    radial-gradient(circle at top right, rgba(88, 101, 242, 0.12), transparent 22%),
-    radial-gradient(circle at bottom left, rgba(88, 101, 242, 0.08), transparent 26%),
-    linear-gradient(180deg, var(--bg), transparent);
-}
-
-.dark .login-page-header {
-  background: linear-gradient(180deg, rgba(88, 101, 242, 0.1), transparent);
-}
-
-.dark .login-card {
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
-}
 
 .landing-theme img { opacity: 1; }
 .landing-theme .feature-card img,
@@ -387,7 +389,18 @@ html:not(.dark) label.btn-accent.text-sm:hover:not(:disabled) {
 .feature-card:hover { transform: translateY(-6px) scale(1.01); box-shadow: 0 12px 30px rgba(2,6,23,0.08); }
 
 /* Chat-specific bubble styles mapping to design tokens */
-.user-bubble { background: linear-gradient(90deg,var(--accent),var(--accent-600)); color: white; border-radius: 18px 18px 4px 18px; }
+.user-bubble {
+  background: linear-gradient(90deg, var(--accent), var(--accent-600));
+  color: #ffffff;
+  border-radius: 18px 18px 4px 18px;
+}
+
+html:not(.dark) .user-bubble {
+  background: rgba(88, 101, 242, 0.14);
+  color: var(--text-primary);
+  border: 1px solid rgba(88, 101, 242, 0.35);
+}
+
 .agent-bubble { background: var(--bg-panel); color: var(--text-primary); border-radius: 18px 18px 18px 4px; }
 .system-bubble {
   background: var(--bg-panel);
@@ -480,8 +493,8 @@ a:not(.btn-accent):not(.link-accent):not(.header-link):not(.cta-secondary):not(.
   box-shadow: 0 1px 4px rgba(71, 82, 196, 0.45);
 }
 
-/* Navbar profile avatar — dark text on soft accent in light mode */
-html:not(.dark) .app-header .avatar-accent {
+/* Accent avatars — dark text on soft fill in light mode */
+html:not(.dark) .avatar-accent {
   background-color: rgba(88, 101, 242, 0.2) !important;
   background-image: none !important;
   color: #3b45b8 !important;
@@ -814,16 +827,6 @@ html:not(.dark) .profile-rail::before {
     border-bottom: none;
     border-right: 1px solid var(--border-strong);
   }
-}
-
-/* Login decorative blobs — theme aware */
-html:not(.dark) .login-bg-dot {
-  opacity: 0.16;
-}
-
-.dark .login-bg-dot {
-  mix-blend-mode: screen;
-  opacity: 0.12;
 }
 
 .dark .landing-body {

@@ -3,7 +3,7 @@
     <div class="landing-container">
       <div class="landing-hero-grid">
         <div class="landing-hero-copy">
-          <span class="landing-badge">Enterprise AI Platform</span>
+          <span class="landing-badge">{{ brandName }} Platform</span>
           <h1 class="hero-heading">Build intelligent agents and collaborate securely</h1>
           <p class="hero-sub">Create workflows, bind custom tools per agent, and bring your own LLM keys. Organization-scoped controls with fast onboarding.</p>
 
@@ -87,11 +87,8 @@
     <div class="app-footer__inner max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="app-footer__grid">
         <div>
-          <div class="flex items-center gap-2">
-            <div class="w-8 h-8 logo-badge rounded-lg flex items-center justify-center font-bold text-sm">AI</div>
-            <span class="font-semibold text-default">Enterprise Multi-Agent</span>
-          </div>
-          <p class="text-sm muted mt-2">Secure multi-agent workspace for modern teams.</p>
+          <app-brand-mark size="sm" variant="full" nameClass="font-semibold text-default"></app-brand-mark>
+          <p class="text-sm muted mt-2">Persistent memory and tools for modern agent teams.</p>
         </div>
         <div class="app-footer__links">
           <a routerLink="/workspace" class="app-footer__link">Workspace</a>
@@ -100,7 +97,7 @@
           <a routerLink="/settings" class="app-footer__link">Settings</a>
         </div>
       </div>
-      <div class="app-footer__bottom muted">© 2026 Enterprise AI Agent Platform</div>
+      <div class="app-footer__bottom muted">{{ brandCopyright }}</div>
     </div>
   </footer>
 </div>

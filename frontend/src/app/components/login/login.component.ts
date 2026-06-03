@@ -1,27 +1,40 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
+import { ThemeService } from '../../services/theme.service';
+import { BrandMarkComponent } from '../brand-mark/brand-mark.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink, BrandMarkComponent],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   email = '';
   password = '';
   isRegistering = false;
   errorMessage = '';
   isLoading = false;
+  darkMode = false;
 
   private auth = inject(AuthService);
   private api = inject(ApiService);
   private router = inject(Router);
+  private theme = inject(ThemeService);
+
+  ngOnInit() {
+    this.darkMode = this.theme.isDark;
+  }
+
+  toggleDarkMode() {
+    this.theme.toggleLightDark();
+    this.darkMode = this.theme.isDark;
+  }
 
   onSubmit() {
     if (!this.email || !this.password) return;

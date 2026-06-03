@@ -4,22 +4,27 @@ import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } fro
 import { AuthService } from './services/auth.service';
 import { ApiService } from './services/api.service';
 import { ToastComponent } from './components/toast/toast.component';
+import { BrandMarkComponent } from './components/brand-mark/brand-mark.component';
+import { ThemeService } from './services/theme.service';
+import { BRAND_NAME } from './core/brand';
 import { Observable, Subscription, lastValueFrom } from 'rxjs';
 import { map, filter, startWith } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ToastComponent],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ToastComponent, BrandMarkComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
 export class AppComponent implements OnInit, OnDestroy {
-  title = 'Enterprise AI Platform';
+  title = BRAND_NAME;
 
   private auth = inject(AuthService);
   private api = inject(ApiService);
   private router = inject(Router);
+  private theme = inject(ThemeService);
+  private themeSub: Subscription | null = null;
   hasOrgKey: boolean = false;
   private orgIdSub: Subscription | null = null;
   showKeyDropdown: boolean = false;
@@ -80,23 +85,14 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    try {
-      const saved = localStorage.getItem('darkMode');
-      this.darkMode = saved === 'true';
-      if (this.darkMode) document.documentElement.classList.add('dark');
-    } catch (e) {}
+    this.darkMode = this.theme.isDark;
+    this.themeSub = this.theme.mode$.subscribe(() => {
+      this.darkMode = this.theme.isDark;
+    });
   }
 
   toggleDarkMode() {
-    this.darkMode = !this.darkMode;
-    try {
-      if (this.darkMode) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-      localStorage.setItem('darkMode', String(this.darkMode));
-    } catch (e) {}
+    this.theme.toggleLightDark();
   }
 
   openProfile() {
@@ -110,5 +106,6 @@ export class AppComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     if (this.orgIdSub) this.orgIdSub.unsubscribe();
+    this.themeSub?.unsubscribe();
   }
 }

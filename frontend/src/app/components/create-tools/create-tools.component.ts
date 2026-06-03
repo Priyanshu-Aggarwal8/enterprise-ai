@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { ApiService, CustomTool } from '../../services/api.service';
+import { ApiService, CustomTool, ToolSandboxReport } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
 
@@ -17,7 +17,11 @@ export class CreateToolsComponent implements OnInit {
   toolName = '';
   toolDescription = '';
   toolCode = 'def run(input_string: str) -> str:\n    """Your custom logic here"""\n    return f"Processed: {input_string}"';
+  sandboxTestInput = 'sandbox-test';
   isSaving = false;
+  isSandboxTesting = false;
+  sandboxPassed = false;
+  sandboxReport: ToolSandboxReport | null = null;
   isEditing = false;
   editingToolId: string | null = null;
   savedTools: CustomTool[] = [];
@@ -51,12 +55,53 @@ export class CreateToolsComponent implements OnInit {
     return tool.bound_agents.map((a) => a.name).join(', ');
   }
 
+  onCodeChange(): void {
+    this.sandboxPassed = false;
+    this.sandboxReport = null;
+  }
+
+  runSandboxTest(): void {
+    if (!this.toolCode.trim()) return;
+
+    this.isSandboxTesting = true;
+    this.sandboxReport = null;
+
+    this.api.sandboxTestTool(
+      this.toolName || 'preview_tool',
+      this.toolDescription,
+      this.toolCode,
+      this.sandboxTestInput
+    ).subscribe({
+      next: (report) => {
+        this.isSandboxTesting = false;
+        this.sandboxReport = report;
+        this.sandboxPassed = report.passed;
+        if (report.passed) {
+          this.toast.push(
+            report.requires_approval
+              ? 'Sandbox passed — tool will require human approval at runtime'
+              : 'Sandbox security test passed',
+            'success'
+          );
+        } else {
+          this.toast.push('Sandbox test failed — fix issues before saving', 'error');
+        }
+      },
+      error: (err) => {
+        this.isSandboxTesting = false;
+        this.toast.push(err.error?.detail?.message || 'Sandbox test failed', 'error');
+      }
+    });
+  }
+
   resetForm(): void {
     this.isEditing = false;
     this.editingToolId = null;
     this.toolName = '';
     this.toolDescription = '';
     this.toolCode = 'def run(input_string: str) -> str:\n    """Your custom logic here"""\n    return f"Processed: {input_string}"';
+    this.sandboxPassed = false;
+    this.sandboxReport = null;
   }
 
   editTool(tool: CustomTool): void {
@@ -72,12 +117,19 @@ export class CreateToolsComponent implements OnInit {
     this.toolName = tool.name;
     this.toolDescription = tool.description;
     this.toolCode = tool.python_code;
+    this.sandboxPassed = tool.sandbox_status === 'passed';
+    this.sandboxReport = null;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   saveTool(): void {
     const orgId = this.auth.getOrgId();
     if (!orgId || !this.toolName.trim() || !this.toolCode.trim()) return;
+
+    if (!this.sandboxPassed) {
+      this.toast.push('Run the WASM sandbox security test before saving', 'error');
+      return;
+    }
 
     this.isSaving = true;
     const onDone = () => {
@@ -94,7 +146,7 @@ export class CreateToolsComponent implements OnInit {
         },
         error: (err) => {
           this.isSaving = false;
-          this.toast.push(err.error?.detail || 'Error updating tool', 'error');
+          this.handleSaveError(err);
         }
       });
     } else {
@@ -105,10 +157,19 @@ export class CreateToolsComponent implements OnInit {
         },
         error: (err) => {
           this.isSaving = false;
-          this.toast.push(err.error?.detail || 'Error saving tool', 'error');
+          this.handleSaveError(err);
         }
       });
     }
+  }
+
+  private handleSaveError(err: any): void {
+    const detail = err.error?.detail;
+    if (detail?.sandbox) {
+      this.sandboxReport = detail.sandbox;
+      this.sandboxPassed = false;
+    }
+    this.toast.push(detail?.message || detail || 'Error saving tool', 'error');
   }
 
   deleteTool(tool: CustomTool): void {
@@ -129,6 +190,15 @@ export class CreateToolsComponent implements OnInit {
         this.toast.push(err.error?.detail || 'Error deleting tool', 'error');
       }
     });
+  }
+
+  riskLabel(tier?: string): string {
+    switch (tier) {
+      case 'safe': return 'Safe';
+      case 'sensitive': return 'Sensitive';
+      case 'dangerous': return 'Dangerous';
+      default: return 'Unverified';
+    }
   }
 
   goToWorkspace(): void {

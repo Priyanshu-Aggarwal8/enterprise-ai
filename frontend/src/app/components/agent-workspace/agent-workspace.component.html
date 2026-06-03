@@ -35,6 +35,29 @@
           </div>
         </section>
 
+        <section class="flex flex-col border-b flex-shrink-0 panel-section">
+          <button type="button" (click)="documentsPanelOpen = !documentsPanelOpen"
+                  class="section-header flex items-center justify-between px-4 py-3 text-left">
+            <h2 class="text-xs font-bold muted uppercase tracking-widest">Saved Chats</h2>
+            <span class="text-xs muted">{{ savedChats.length }} saved</span>
+          </button>
+          <div class="section-body overflow-y-auto px-4 pb-3 max-h-40">
+            <div *ngIf="savedChats.length === 0" class="text-sm muted">No saved chats yet.</div>
+            <ul class="space-y-2">
+              <li *ngFor="let c of savedChats" class="flex items-center justify-between p-2 rounded hover:bg-panel transition-colors">
+                <div class="min-w-0">
+                  <div class="text-sm font-medium truncate">{{ c.title }}</div>
+                  <div class="text-xs muted">{{ c.created_at | date:'short' }}</div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button (click)="editSavedChat(c)" class="text-xs">Edit</button>
+                  <button (click)="deleteSavedChat(c)" class="text-xs" style="color:var(--danger);">Delete</button>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </section>
+
         <section class="flex flex-col flex-1 min-h-0 panel-section">
           <button type="button" (click)="toolsPanelOpen = !toolsPanelOpen"
                   class="section-header flex items-center justify-between px-4 py-3 text-left">
@@ -100,8 +123,8 @@
         <div *ngFor="let msg of chatHistory" class="flex gap-3"
              [ngClass]="{'justify-end': msg.role === 'user', 'justify-start': msg.role !== 'user'}">
 
-          <div *ngIf="msg.role === 'agent'" class="w-8 h-8 rounded-full avatar-accent flex-shrink-0">
-            <span class="font-bold text-xs">AI</span>
+          <div *ngIf="msg.role === 'agent'" class="chat-agent-avatar flex-shrink-0">
+            <app-brand-mark size="xs" variant="icon"></app-brand-mark>
           </div>
 
           <div [class.max-w-md]="msg.role === 'user'" [class.max-w-2xl]="msg.role !== 'user'" class="flex flex-col min-w-0">
@@ -111,9 +134,7 @@
                    'agent-bubble': msg.role === 'agent',
                    'system-bubble': msg.role === 'system'
                  }" [ngStyle]="msg.role === 'agent' ? {'border':'1px solid var(--card-contrast)'} : {}">
-              <span [class.animate-pulse]="msg.isStreaming" [style.color]="msg.role==='user' ? 'white' : ''">
-                {{ msg.content }}
-              </span>
+              <span [class.animate-pulse]="msg.isStreaming" [innerHTML]="renderMessage(msg.content, msg.isStreaming)"></span>
             </div>
           </div>
 
@@ -128,6 +149,7 @@
           <div class="flex flex-wrap gap-2 mb-3">
             <button (click)="goToCreateTools()" class="action-chip">Create Tool</button>
             <button (click)="goToCreateAgent()" class="action-chip">Create Agent</button>
+            <button (click)="saveCurrentChat()" class="action-chip">Save Chat</button>
             <button (click)="refreshTools()" class="action-chip action-chip--muted">Refresh</button>
           </div>
 
@@ -152,10 +174,10 @@
 
             <button (click)="submitPrompt()"
                     [disabled]="isExecuting || !prompt.trim() || !canChat"
-                    class="send-btn flex-shrink-0">
+                    class="send-btn btn-accent flex-shrink-0">
               <span *ngIf="!isExecuting">Send</span>
               <span *ngIf="isExecuting" class="flex items-center gap-2">
-                <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <div class="send-btn__spinner w-4 h-4 border-2 border-t-transparent rounded-full animate-spin"></div>
               </span>
             </button>
           </div>
@@ -218,5 +240,38 @@
       </aside>
     </div>
 
+  </div>
+
+  <!-- Human-in-the-loop tool approval -->
+  <div *ngIf="pendingApproval" class="approval-overlay" role="dialog" aria-modal="true" aria-labelledby="approval-title">
+    <div class="approval-modal">
+      <h3 id="approval-title" class="approval-modal__title">Tool execution approval</h3>
+      <p class="approval-modal__message">{{ pendingApproval.message }}</p>
+      <div class="approval-modal__meta">
+        <div><strong>Tool:</strong> {{ pendingApproval.tool_name }}</div>
+        <div><strong>Risk:</strong> {{ pendingApproval.risk_tier }}</div>
+        <div *ngIf="pendingApproval.args_preview" class="approval-modal__args">
+          <strong>Input preview:</strong>
+          <code>{{ pendingApproval.args_preview }}</code>
+        </div>
+      </div>
+      <p class="approval-modal__hint text-xs muted">
+        This tool may access sensitive data or affect your workspace. Approve only if you trust this action.
+      </p>
+      <div class="approval-modal__actions">
+        <button type="button"
+                class="btn-danger py-2 px-4 rounded-lg font-semibold"
+                [disabled]="isSubmittingApproval"
+                (click)="respondToApproval(false)">
+          Deny
+        </button>
+        <button type="button"
+                class="btn-accent py-2 px-4 rounded-lg font-semibold"
+                [disabled]="isSubmittingApproval"
+                (click)="respondToApproval(true)">
+          {{ isSubmittingApproval ? 'Submitting...' : 'Approve' }}
+        </button>
+      </div>
+    </div>
   </div>
 </div>

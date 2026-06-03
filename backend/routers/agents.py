@@ -15,6 +15,8 @@ from agent_tool_bindings import (
     get_tool_ids_for_agent,
 )
 
+from tool_approval import submit_approval_decision
+
 router = APIRouter(
     prefix="/agents",
     tags=["Agents"]
@@ -114,6 +116,20 @@ async def run_agent(
     return {
         "message": "Agent execution queued successfully",
         "task_id": task.id,
+    }
+
+
+@router.post("/tool-approvals/{approval_id}")
+async def respond_tool_approval(
+    approval_id: str,
+    decision: schemas.ToolApprovalDecision,
+    current_user: models.User = Depends(require_organization),
+):
+    submit_approval_decision(approval_id, decision.approved, current_user.uid)
+    return {
+        "message": "Approval recorded",
+        "approval_id": approval_id,
+        "approved": decision.approved,
     }
 
 

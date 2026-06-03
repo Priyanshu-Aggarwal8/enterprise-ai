@@ -64,10 +64,12 @@ class CustomTool(Base):
     org_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
     name = Column(String, nullable=False)
     description = Column(String, nullable=False)
-    python_code = Column(Text, nullable=False) 
+    python_code = Column(Text, nullable=False)
+    risk_tier = Column(String, nullable=False, default="unknown")
+    sandbox_status = Column(String, nullable=False, default="pending")
+    sandbox_report = Column(Text, nullable=True)
+    requires_approval = Column(String, nullable=False, default="false")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-
-    organization = relationship("Organization")
 
     organization = relationship("Organization")
 
@@ -112,5 +114,20 @@ class User(Base):
     org_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=True)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    organization = relationship("Organization")
+
+
+class SavedChat(Base):
+    __tablename__ = "saved_chats"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    org_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    agent_id = Column(UUID(as_uuid=True), ForeignKey("agent_definitions.id", ondelete="SET NULL"), nullable=True)
+    session_id = Column(String, nullable=True)
+    title = Column(String, nullable=False)
+    content = Column(Text, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     organization = relationship("Organization")

@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from database import engine, Base
 import models
-from routers import organizations, agents, documents, tools, users
+from routers import organizations, agents, documents, tools, users, chats
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
@@ -11,10 +11,29 @@ async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
         await conn.run_sync(Base.metadata.create_all)
+        await conn.execute(text(
+            "ALTER TABLE custom_tools ADD COLUMN IF NOT EXISTS risk_tier VARCHAR DEFAULT 'unknown'"
+        ))
+        await conn.execute(text(
+            "ALTER TABLE custom_tools ADD COLUMN IF NOT EXISTS sandbox_status VARCHAR DEFAULT 'pending'"
+        ))
+        await conn.execute(text(
+            "ALTER TABLE custom_tools ADD COLUMN IF NOT EXISTS sandbox_report TEXT"
+        ))
+        await conn.execute(text(
+            "ALTER TABLE custom_tools ADD COLUMN IF NOT EXISTS requires_approval VARCHAR DEFAULT 'false'"
+        ))
+        # Create IVFFlat index for fast approximate vector similarity search
+        # This provides ~10-100x speedup for document retrieval on large datasets
+        await conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS idx_document_chunks_embedding "
+            "ON document_chunks USING ivfflat (embedding vector_cosine_ops) "
+            "WITH (lists = 100)"
+        ))
     yield
 
 app = FastAPI(
-    title="Enterprise Multi-AI Agent Platform",
+    title="Mnemos",
     lifespan=lifespan
 )
 
@@ -36,6 +55,7 @@ app.include_router(agents.router)
 app.include_router(documents.router)
 app.include_router(tools.router)
 app.include_router(users.router)
+app.include_router(chats.router)
 
 @app.get("/health")
 async def health_check():
