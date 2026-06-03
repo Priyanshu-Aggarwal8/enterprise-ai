@@ -14,7 +14,7 @@ router = APIRouter(prefix="/tools", tags=["Custom Tools"])
 
 
 def _tool_requires_approval(tool: models.CustomTool) -> bool:
-    return str(tool.requires_approval).lower() in {"true", "1", "yes"}
+    return bool(tool.requires_approval)
 
 
 def _tool_to_response(tool: models.CustomTool, bound_agents: list[models.AgentDefinition]) -> schemas.CustomToolResponse:
@@ -37,7 +37,7 @@ def _apply_sandbox_metadata(tool: models.CustomTool, report) -> None:
     tool.risk_tier = report.risk_tier
     tool.sandbox_status = "passed" if report.passed else "failed"
     tool.sandbox_report = json.dumps(report.to_dict())
-    tool.requires_approval = "true" if report.requires_approval else "false"
+    tool.requires_approval = bool(report.requires_approval)
 
 
 @router.post("/sandbox-test", response_model=schemas.ToolSandboxTestResponse)
