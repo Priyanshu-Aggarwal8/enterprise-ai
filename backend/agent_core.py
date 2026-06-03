@@ -9,7 +9,6 @@ load_dotenv()
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.prebuilt import create_react_agent
 from langgraph.checkpoint.postgres import PostgresSaver
-from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.tools import tool, StructuredTool
 from config import settings
 from tool_sandbox import execute_tool_safely
@@ -69,6 +68,8 @@ def run_agent_workflow(
     @tool
     def search_company_documents(query: str) -> str:
         """Search the company's private uploaded documents. Use this whenever the user asks about specific company knowledge, files, or reports."""
+        from langchain_huggingface import HuggingFaceEmbeddings
+        
         _, approved = request_tool_approval(
             task_id=task_id,
             channel_name=channel_name,
