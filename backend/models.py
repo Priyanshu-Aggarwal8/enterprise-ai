@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, ForeignKey, DateTime, Text
+from sqlalchemy import Column, String, ForeignKey, DateTime, Text, Boolean
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -68,7 +68,7 @@ class CustomTool(Base):
     risk_tier = Column(String, nullable=False, default="unknown")
     sandbox_status = Column(String, nullable=False, default="pending")
     sandbox_report = Column(Text, nullable=True)
-    requires_approval = Column(String, nullable=False, default="false")
+    requires_approval = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     organization = relationship("Organization")
