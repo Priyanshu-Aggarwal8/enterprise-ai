@@ -36,12 +36,12 @@
         </section>
 
         <section class="flex flex-col border-b flex-shrink-0 panel-section">
-          <button type="button" (click)="documentsPanelOpen = !documentsPanelOpen"
+          <button type="button" (click)="savedChatsPanelOpen = !savedChatsPanelOpen"
                   class="section-header flex items-center justify-between px-4 py-3 text-left">
             <h2 class="text-xs font-bold muted uppercase tracking-widest">Saved Chats</h2>
-            <span class="text-xs muted">{{ savedChats.length }} saved</span>
+            <span class="text-xs muted">{{ savedChatsPanelOpen ? '▼' : '▶' }}</span>
           </button>
-          <div class="section-body overflow-y-auto px-4 pb-3 max-h-40">
+          <div *ngIf="savedChatsPanelOpen" class="section-body overflow-y-auto px-4 pb-3 max-h-40">
             <div *ngIf="savedChats.length === 0" class="text-sm muted">No saved chats yet.</div>
             <ul class="space-y-2">
               <li *ngFor="let c of savedChats" class="flex items-center justify-between p-2 rounded hover:bg-panel transition-colors">

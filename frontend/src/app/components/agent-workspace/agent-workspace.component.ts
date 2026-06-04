@@ -51,6 +51,7 @@ export class AgentWorkspaceComponent implements OnInit, OnDestroy {
   savedChats: any[] = [];
 
   documentsPanelOpen = true;
+  savedChatsPanelOpen = true;
   toolsPanelOpen = true;
 
   leftWidth = LEFT_DEFAULT;
