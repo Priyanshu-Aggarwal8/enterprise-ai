@@ -13,16 +13,8 @@ celery_app = Celery(
     backend=settings.redis_url
 )
 
-celery_app.conf.broker_use_ssl = {
-    "ssl_cert_reqs": ssl.CERT_NONE
-}
-
-celery_app.conf.redis_backend_use_ssl = {
-    "ssl_cert_reqs": ssl.CERT_NONE
-}
-
 sync_db_url = settings.database_url.replace("+asyncpg", "")
-redis_client = redis.from_url(settings.redis_url, ssl_cert_reqs=ssl.CERT_NONE)
+redis_client = redis.from_url(settings.redis_url)
 
 @celery_app.task(name="worker.execute_agent")
 def execute_agent(prompt: str, org_id: str, session_id: str, agent_id: str | None = None):

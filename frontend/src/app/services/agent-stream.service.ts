@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
+import { environment } from '../../environments/environment.prod';
 
 @Injectable({
   providedIn: 'root'
@@ -9,7 +10,11 @@ export class AgentStreamService {
   private ws!: WebSocket;
 
   connect(taskId: string): void {
-    this.ws = new WebSocket(`ws://127.0.0.1:8000/agents/ws/${taskId}`);
+    const wsUrl = environment.apiUrl
+      .replace('https://', 'wss://')
+      .replace('http://', 'ws://');
+
+    this.ws = new WebSocket(`${wsUrl}/agents/ws/${taskId}`)
 
     this.ws.onopen = () => {
       this.messages$.next({ status: 'connected', task_id: taskId });
